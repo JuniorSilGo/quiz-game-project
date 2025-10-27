@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Postgres
+  postgres:
+    image: postgres:15
+    container_name: quiz_postgres
+    environment:
+      POSTGRES_USER: quiz_user
+      POSTGRES_PASSWORD: quiz_password
+      POSTGRES_DB: quiz_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Redis
+  redis:
+    image: redis:7
+    container_name: quiz_redis
+    ports:
+      - "9379:6379"
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: quiz_rabbitmq
+    ports:
+      - "5672:5672"       # AMQP
+      - "15672:15672"     # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # kong Database
+  kong-database:
+    image: postgres:15
+    container_name: kong_postgres
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    ports:
+      - "5433:5432"      # Diferente do Postgres do app
+    volumes:
+      - kongdata:/var/lib/postgresql/data
+
+  # Kong Gateway
+  kong:
+    image: kong:3
+    container_name: kong
+    depends_on:
+      - kong-database
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DB: kong
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 sll
+    ports:
+      - "8000:8000"     # Proxy HTTP
+      - "8443:8443"     # Proxy HTTPS
+      - "8001:8001"     # Admin API
+      - "8444:8444"     # Admin API HTTPS
+
+volumes:
+  pgdata:
+  kongdata:
+    
