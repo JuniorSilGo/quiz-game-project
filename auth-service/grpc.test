@@ -1,0 +1,9 @@
+docker run --rm -it \
+  --network host \
+  -v "$PWD/auth-service/proto:/proto" \
+  fullstorydev/grpcurl \
+  -plaintext \
+  -import-path /proto \
+  -proto auth.proto \
+  -d '{"token":"<jwt_token>"}' \
+  localhost:50051 auth.AuthService/ValidateToken
