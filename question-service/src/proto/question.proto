@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package question;
+
+
+service QuestionService {
+  rpc GenerateQuestions (GenerateQuestionRequest) returns (GenerateQuestionResponse);
+}
+
+
+message GenerateQuestionRequest {
+  string topic = 1;
+  string difficulty = 2;
+  int32 quantity = 3;
+}
+
+
+message Question {
+  string question = 1;
+  map<string, string> options = 2;
+  string correctAnswer = 3;
+  string topic = 4;
+  string difficulty = 5;
+}
+
+// Resposta contendo a lista de perguntas
+message GenerateQuestionResponse {
+  repeated Question questions = 1;
+}
