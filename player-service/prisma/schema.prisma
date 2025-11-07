@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model players {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  email          String?
+  avatar         String?
+  level          Int      @default(1)
+  xp             BigInt   @default(0)
+  wins           Int      @default(0)
+  matchesPlayed  Int      @map("matches_played") @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @map("updated_at")
+
+  playerHistory  player_history[]  @relation("PlayerHistoryRelation")
+  @@map("players") 
+}
+
+model player_history {
+  id         Int      @id @default(autoincrement())
+  player     players  @relation(fields: [playerId], references: [id], name: "PlayerHistoryRelation")
+  playerId   Int      @map("player_id")
+  eventType  String   @map("event_type")
+  delta      String?
+  oldValues  String?  @map("old_values")
+  newValues  String?  @map("new_values")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("player_history")
+  @@index([playerId])
+}
