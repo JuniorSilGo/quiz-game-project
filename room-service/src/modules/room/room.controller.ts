@@ -4,7 +4,7 @@ import { RoomService } from './room.service';
 
 @Controller()
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(private readonly roomService: RoomService) { }
 
   @GrpcMethod('RoomService', 'CreateRoom')
   async createRoom(data: { name: string; ownerId: string }) {
@@ -28,8 +28,13 @@ export class RoomController {
     return this.roomService.listPlayers(data.roomId);
   }
 
+  @GrpcMethod('RoomService', 'NotifyMatchStart')
+  async notifyMatchStart(data: { roomId: string }) {
+    return this.roomService.notifyMatchStart(data.roomId);
+  }
+
   @GrpcMethod('RoomService', 'Ping')
   ping(_: any) {
-  return { message: 'pong' };
-}
+    return { message: 'pong' };
+  }
 }
