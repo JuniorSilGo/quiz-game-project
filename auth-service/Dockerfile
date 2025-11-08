@@ -1,16 +1,21 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
+
+COPY prisma ./prisma
+
+RUN npx prisma generate
+
+COPY proto ./proto
 
 COPY . .
 
 RUN npm run build
 
-# definir uma porta para cada microserviço.
-EXPOSE 3000
+EXPOSE 3001 50051
 
 CMD ["node", "dist/main"]

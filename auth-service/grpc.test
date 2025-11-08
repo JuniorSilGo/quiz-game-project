@@ -6,4 +6,4 @@ docker run --rm -it \
   -import-path /proto \
   -proto auth.proto \
   -d '{"token":"<jwt_token>"}' \
-  localhost:50051 auth.AuthService/ValidateToken
+  localhost:50050 auth.AuthService/ValidateToken

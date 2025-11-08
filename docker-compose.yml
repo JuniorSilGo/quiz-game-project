@@ -18,13 +18,34 @@ services:
     ports: [ "3001:3001", "50051:50051" ]
     networks: [ quiz-net ]
 
-#  gateway:
-#    build: ./gateway
-#    container_name: gateway
-#    env_file: ./gateway/.env
-#    depends_on: [ auth-service ]
-#    ports: [ "3000:3000" ]
-#    networks: [ quiz-net ]
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    env_file: ./gateway/.env
+    depends_on: [ auth-service ]
+    ports: [ "3000:3000", "50050:50050" ]
+    networks: [ quiz-net ]
+
+  kong:
+    image: kong:3.5
+    container_name: kong
+    depends_on: [ gateway ]
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+      KONG_LOG_LEVEL: notice
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    ports:
+      - "8000:8000"   # Proxy HTTP (cliente → Kong)
+      - "8001:8001"   # Admin API HTTP
+    volumes:
+      - ./kong/kong.yml:/kong/declarative/kong.yml:ro
+    networks: [ quiz-net ]
 
 volumes:
   pgdata:
