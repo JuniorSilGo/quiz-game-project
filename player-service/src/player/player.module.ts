@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PlayerController } from './player.controller';
+import { PlayerGrpcController } from './player.controller';
 import { PlayerService } from './player.service';
 import { PlayerRepository } from './player.repository';
 import { PlayerResolver } from '../graphql/player.resolver';
@@ -8,7 +8,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [PlayerController],
+  controllers: [PlayerGrpcController],
   providers: [
     {
       provide: PrismaClient,

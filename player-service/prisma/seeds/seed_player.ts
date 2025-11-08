@@ -56,18 +56,18 @@ async function main() {
   for (const p of playersData) {
     await prisma.players.upsert({
       where: { username: p.username },
-      update: {}, // não precisa atualizar nada, apenas garantir que exista
+      update: {}, 
       create: p,
     });
     console.log(`Upserted player ${p.username}`);
   }
 
-  console.log('✅ Players seeding finished.');
+  console.log('Players seeding finished.');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error while seeding players:', e);
+    console.error('Error while seeding players:', e);
     process.exitCode = 1;
   })
   .finally(async () => {

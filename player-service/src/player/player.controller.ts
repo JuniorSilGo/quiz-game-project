@@ -1,43 +1,38 @@
-  import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Patch,
-    Post,
-    ParseIntPipe,
-  } from '@nestjs/common';
-  import { PlayerService } from './player.service';
-  import { CreatePlayerDto } from './dto/create-player.dto';
-  import { UpdatePlayerDto } from './dto/update-player.dto';
+import { Controller } from '@nestjs/common';
+import { GrpcMethod } from '@nestjs/microservices';
+import { PlayerService } from './player.service';
 
-  @Controller('players')
-  export class PlayerController {
-  constructor(private service: PlayerService) {}
+@Controller()
+export class PlayerGrpcController {
+  constructor(private readonly playerService: PlayerService) {}
 
-  @Get()
-  async findAll() {
-      return this.service.findAll();
+  @GrpcMethod('PlayerService', 'GetPlayerById')
+  async getPlayerById(data: { id: number }) {
+    const player = await this.playerService.findOne(data.id);
+    return { player };
   }
 
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-      return this.service.findOne(id);
+  @GrpcMethod('PlayerService', 'GetPlayerByUsername')
+  async getPlayerByUsername(data: { username: string }) {
+    const player = await this.playerService.findByUsername(data.username);
+    return { player };
   }
 
-  @Post()
-  async create(@Body() dto: CreatePlayerDto) {
-      return this.service.create(dto);
+  @GrpcMethod('PlayerService', 'CreatePlayer')
+  async createPlayer(data: any) {
+    const player = await this.playerService.create(data);
+    return { player };
   }
 
-  @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePlayerDto) {
-      return this.service.update(id, dto);
+  @GrpcMethod('PlayerService', 'UpdatePlayer')
+  async updatePlayer(data: any) {
+    const player = await this.playerService.update(data.id, data);
+    return { player };
   }
 
-  @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-      return this.service.remove(id);
-    }
+  @GrpcMethod('PlayerService', 'DeletePlayer')
+  async deletePlayer(data: { id: number }) {
+    const success = await this.playerService.remove(data.id);
+    return { success };
+  }
 }
