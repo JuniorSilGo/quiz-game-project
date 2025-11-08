@@ -1,5 +1,5 @@
     import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-    import { Player } from '../player/player.entity';
+    import { Player } from '../graphql/player.type';
     import { PlayerService } from '../player/player.service';
     import { CreatePlayerDto } from '../player/dto/create-player.dto';
     import { UpdatePlayerDto } from '../player/dto/update-player.dto';

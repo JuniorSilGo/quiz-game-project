@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "tsc-watch --onSuccess \"npm run copy-proto && node dist/main.js\"",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -17,13 +17,25 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "copy-proto": "mkdir dist\\grpc 2> NUL & copy src\\grpc\\player.proto dist\\grpc\\",
+  
+  "build": "nest build && npm run copy-proto",
+  "copy-proto": "if not exist dist\\grpc mkdir dist\\grpc && copy src\\grpc\\player.proto dist\\grpc\\",
+  "start:dev": "nest start --watch",
+  "start": "nest start",
+  "start:debug": "nest start --debug --watch",
+  "start:prod": "node dist/main"
+
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.1",
+    "@grpc/proto-loader": "^0.8.0",
     "@nestjs/common": "^11.1.8",
     "@nestjs/core": "^11.0.1",
     "@nestjs/graphql": "^13.2.0",
     "@nestjs/mapped-types": "^2.1.0",
+    "@nestjs/microservices": "^11.1.8",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^6.18.0",
@@ -59,6 +71,7 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
+    "tsc-watch": "^7.2.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
