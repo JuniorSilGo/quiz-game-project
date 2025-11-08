@@ -6,6 +6,7 @@ service GameService {
   rpc TrackMatchState(TrackMatchStateRequest) returns (TrackMatchStateResponse);
   rpc SaveMatchResult(SaveMatchResultRequest) returns (SaveMatchResultResponse);
   rpc ListActiveMatches(Empty) returns (ActiveMatchesList);
+  rpc ListFinishedMatches(Empty) returns (FinishedMatchesList);
 }
 
 message TrackMatchStateRequest {
@@ -27,6 +28,10 @@ message SaveMatchResultResponse {
 }
 
 message ActiveMatchesList {
+  repeated MatchInfo matches = 1;
+}
+
+message FinishedMatchesList {
   repeated MatchInfo matches = 1;
 }
 
