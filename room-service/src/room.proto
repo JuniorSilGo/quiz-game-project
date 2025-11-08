@@ -8,6 +8,7 @@ service RoomService {
   rpc LeaveRoom(LeaveRoomRequest) returns (RoomResponse);
   rpc GetRooms(Empty) returns (RoomsList);
   rpc ListPlayers(ListPlayersRequest) returns (PlayersList);
+  rpc NotifyMatchStart(NotifyMatchStartRequest) returns (NotifyMatchStartResponse);
 
   rpc Ping(Empty) returns (PingResponse);
 }
@@ -51,6 +52,16 @@ message RoomResponse {
 
 message PlayersList {
   repeated Player players = 1;
+}
+
+message NotifyMatchStartRequest {
+  string roomId = 1;
+}
+
+message NotifyMatchStartResponse {
+  string message = 1;
+  string roomId = 2;
+  repeated Player players = 3;
 }
 
 message Empty {}

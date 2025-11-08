@@ -3,7 +3,7 @@ import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
 export class RoomService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createRoom(data: { name: string; ownerId: string }) {
     return this.prisma.room.create({ data });
@@ -20,18 +20,18 @@ export class RoomService {
   async joinRoom(data: { roomId: string; playerId: string, playerName: string }) {
     const { roomId, playerId, playerName } = data;
 
-     const room = await this.prisma.room.findUnique({
+    const room = await this.prisma.room.findUnique({
       where: { id: roomId },
       include: { players: true },
     });
 
     if (!room) throw new NotFoundException(`Room ${data.roomId} not found`);
-    
+
     let player = await this.prisma.player.findUnique({
       where: { id: playerId },
     });
 
-      if (!player) {
+    if (!player) {
 
       player = await this.prisma.player.create({
         data: {
@@ -53,7 +53,7 @@ export class RoomService {
     });
   }
 
-    async leaveRoom(data: { roomId: string; playerId: string }) {
+  async leaveRoom(data: { roomId: string; playerId: string }) {
     const player = await this.prisma.player.findUnique({ where: { id: data.playerId } });
     if (!player) throw new NotFoundException(`Player ${data.playerId} not found`);
 
@@ -68,7 +68,7 @@ export class RoomService {
     });
   }
 
-    async listPlayers(roomId: string) {
+  async listPlayers(roomId: string) {
     const room = await this.prisma.room.findUnique({
       where: { id: roomId },
       include: { players: true }, // traz os players da sala
@@ -79,6 +79,22 @@ export class RoomService {
     }
 
     return { players: room.players };
+  }
+
+  async notifyMatchStart(roomId: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      include: { players: true },
+    });
+
+    if (!room) throw new NotFoundException(`Room with id ${roomId} not found`);
+
+    // Aqui você poderia enviar uma notificação para cada jogador
+    return {
+      message: `Match started for room ${room.name}`,
+      roomId: room.id,
+      players: room.players,
+    };
   }
 
   async updateStatus(roomId: string, status: 'waiting' | 'in-progress' | 'finished') {
