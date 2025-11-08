@@ -23,7 +23,7 @@ message Question {
   string difficulty = 5;
 }
 
-// Resposta contendo a lista de perguntas
+
 message GenerateQuestionResponse {
   repeated Question questions = 1;
 }

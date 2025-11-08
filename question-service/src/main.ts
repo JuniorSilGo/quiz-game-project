@@ -17,7 +17,7 @@ async function bootstrap() {
   );
 
   await app.listen();
-  console.log('🚀 Question gRPC Service rodando na porta 50051');
+  console.log('==== Question gRPC Service rodando na porta 50051 ====');
 }
 
 bootstrap();

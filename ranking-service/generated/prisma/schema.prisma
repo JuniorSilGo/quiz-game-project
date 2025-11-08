@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id             String   @id @default(uuid())
+  externalUserId String   @unique
+  username       String   @unique
+  createdAt      DateTime @default(now())
+
+  stats            PlayerStats?
+  matchesHistory   MatchHistory[]
+  leaderboardSnaps LeaderboardSnapshot[]
+
+  @@map("players")
+}
+
+model PlayerStats {
+  id          String   @id @default(uuid())
+  playerId    String   @unique
+  totalPoints Int      @default(0)
+  gamesPlayed Int      @default(0)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  lastUpdate  DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("player_stats")
+}
+
+model MatchHistory {
+  id       String   @id @default(uuid())
+  matchId  String
+  playerId String
+  score    Int
+  position Int
+  playedAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("matches_history")
+}
+
+model LeaderboardSnapshot {
+  id           String   @id @default(uuid())
+  playerId     String
+  rankPosition Int
+  totalPoints  Int
+  snapshotDate DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("leaderboard_snapshots")
+}

@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { GenerateQuestionDto } from './dto/generate-question.dto';
-import { Question } from './interfaces/question.interface';
+import { Question as QuestionInterface } from './interfaces/question.interface';
+import { Difficulty } from '@prisma/client';
+import prisma from '../db'; 
 
 interface OpenAIChoice {
   message?: { content?: string };
@@ -23,24 +25,22 @@ interface ParsedQuestion {
 export class QuestionService {
   private readonly logger = new Logger(QuestionService.name);
 
-  // 🔹 Endpoint do OpenRouter
   private readonly openRouterUrl =
     'https://openrouter.ai/api/v1/chat/completions';
 
-  // 🔹 Modelo gratuito recomendado (pode trocar no .env)
   private readonly model =
     process.env.OPENROUTER_MODEL ?? 'mistralai/mistral-7b-instruct';
 
   async generateQuestions(
     data: GenerateQuestionDto,
-  ): Promise<{ questions: Question[] }> {
+  ): Promise<{ questions: QuestionInterface[] }> {
     const { topic, difficulty, quantity = 1 } = data;
 
     const prompt = `
-Gere ${quantity} perguntas de múltipla escolha sobre "${topic}",
-no nível de dificuldade "${difficulty}".
-Cada pergunta deve ter 4 alternativas (A, B, C e D), uma resposta correta e o campo "difficulty" com o valor "${difficulty}".
-Responda **somente** com o JSON (array), sem explicações, sem comentários e sem texto fora do JSON.
+Gere ${quantity} perguntas de múltipla escolha sobre "${topic}".
+Nível de dificuldade: "${difficulty}".
+Cada pergunta deve ter 4 alternativas (A, B, C, D), uma resposta correta e o campo "difficulty" com o valor "${difficulty}".
+Responda SOMENTE com JSON válido, sem explicações ou texto fora do JSON.
 Formato esperado:
 [
   {
@@ -49,9 +49,12 @@ Formato esperado:
     "correctAnswer": "A",
     "difficulty": "${difficulty}"
   }
-]`.trim();
+]
+`.trim();
 
     try {
+      this.logger.log(`Enviando prompt para o OpenRouter:\n${prompt}`);
+
       const resp: AxiosResponse<OpenAIResponse> = await axios.post(
         this.openRouterUrl,
         {
@@ -81,29 +84,38 @@ Formato esperado:
         resp.data?.choices?.[0]?.text ??
         '';
 
-      // 🔹 Novo log: mostra o que o modelo realmente respondeu
-      this.logger.debug('🧠 Resposta bruta do modelo:', content);
+      this.logger.debug(' Resposta bruta do modelo:\n' + content);
 
       const jsonText = this.extractJsonArray(content);
       if (!jsonText) {
-        this.logger.warn('⚠️ OpenRouter não retornou JSON válido.');
-        this.logger.debug('Resposta recebida:', content);
+        this.logger.warn('!!! OpenRouter não retornou JSON válido.');
+        this.logger.debug('Resposta recebida (inválida): ' + content);
         return { questions: [] };
       }
 
       const parsed = JSON.parse(jsonText) as ParsedQuestion[];
 
-      const questions: Question[] = parsed.map((item) => ({
-        question: item.question || '',
-        options: {
-          A: item.options?.A || '',
-          B: item.options?.B || '',
-          C: item.options?.C || '',
-          D: item.options?.D || '',
-        },
-        correctAnswer: item.correctAnswer || 'A',
-        topic,
-        difficulty: item.difficulty || difficulty,
+      const savedQuestionsPrisma = await Promise.all(
+        parsed.map(async (item) =>
+          prisma.question.create({
+            data: {
+              category: topic ?? 'Geral', 
+              difficulty: this.mapDifficulty(item.difficulty ?? difficulty),
+              questionText: item.question || 'Pergunta não gerada',
+              options: item.options ?? { A: '', B: '', C: '', D: '' },
+              correctAnswer: item.correctAnswer || 'A',
+              source: 'OpenRouter',
+            },
+          }),
+        ),
+      );
+
+      const questions: QuestionInterface[] = savedQuestionsPrisma.map((q) => ({
+        question: q.questionText,
+        options: q.options as { A: string; B: string; C: string; D: string },
+        correctAnswer: q.correctAnswer,
+        topic: q.category,
+        difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
       }));
 
       return { questions };
@@ -117,11 +129,23 @@ Formato esperado:
     }
   }
 
-  // 🔹 Método melhorado para limpar e validar o JSON
+  private mapDifficulty(value: string): Difficulty {
+    switch (value.toLowerCase()) {
+      case 'easy':
+        return Difficulty.EASY;
+      case 'medium':
+        return Difficulty.MEDIUM;
+      case 'hard':
+        return Difficulty.HARD;
+      default:
+        return Difficulty.MEDIUM;
+    }
+  }
+
+  // 🔹 Extrai JSON limpo da resposta da IA
   private extractJsonArray(text: string): string | null {
     if (!text) return null;
 
-    // Remove blocos de markdown como ```json ou ```
     const cleaned = text
       .replace(/```json/gi, '')
       .replace(/```/g, '')
@@ -129,15 +153,12 @@ Formato esperado:
 
     const start = cleaned.indexOf('[');
     const end = cleaned.lastIndexOf(']');
-
-    if (start === -1 || end === -1 || end <= start) {
-      return null;
-    }
+    if (start === -1 || end === -1 || end <= start) return null;
 
     const jsonText = cleaned.slice(start, end + 1);
 
     try {
-      JSON.parse(jsonText); // valida o JSON
+      JSON.parse(jsonText);
       return jsonText;
     } catch {
       return null;
