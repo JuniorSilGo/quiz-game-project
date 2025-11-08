@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package match_engine;
+
+message StartMatchRequest {
+  int32 roomId = 1;
+}
+
+message StartMatchResponse {
+  int32 matchId = 1;
+  string status = 2;
+  int32 totalRounds = 3;
+  repeated PlayerInfo players = 4;
+}
+
+message SubmitAnswerRequest {
+  int32 matchId = 1;
+  int32 playerId = 2;
+  int32 answerId = 3;
+}
+
+message SubmitAnswerResponse {
+  bool success = 1;
+  string message = 2;
+  int32 score = 3;
+}
+
+message GetStateRequest {
+  int32 matchId = 1;
+}
+
+message RoundInfo {
+  int32 index = 1;
+  int32 questionId = 2;
+  int32 correctAnswerId = 3;
+}
+
+message PlayerInfo {
+  int32 playerId = 1;
+  string username = 2;
+  string avatar = 3;
+  int32 score = 4;
+}
+
+message MatchStateResponse {
+  int32 matchId = 1;
+  string status = 2;
+  int32 currentRound = 3;
+  int32 totalRounds = 4;
+  repeated RoundInfo rounds = 5;
+  repeated PlayerInfo players = 6;
+}
+
+service MatchEngineService {
+  rpc StartMatch(StartMatchRequest) returns (StartMatchResponse);
+  rpc SubmitAnswer(SubmitAnswerRequest) returns (SubmitAnswerResponse);
+  rpc GetState(GetStateRequest) returns (MatchStateResponse);
+}
