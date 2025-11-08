@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package game;
+
+service GameService {
+  rpc TrackMatchState(TrackMatchStateRequest) returns (TrackMatchStateResponse);
+  rpc SaveMatchResult(SaveMatchResultRequest) returns (SaveMatchResultResponse);
+  rpc ListActiveMatches(Empty) returns (ActiveMatchesList);
+}
+
+message TrackMatchStateRequest {
+  string matchId = 1;
+  string status = 2; // ex: "IN_PROGRESS", "FINISHED"
+}
+
+message TrackMatchStateResponse {
+  bool success = 1;
+}
+
+message SaveMatchResultRequest {
+  string matchId = 1;
+  repeated ScoreResult results = 2;
+}
+
+message SaveMatchResultResponse {
+  bool success = 1;
+}
+
+message ActiveMatchesList {
+  repeated MatchInfo matches = 1;
+}
+
+message MatchInfo {
+  string matchId = 1;
+  string status = 2;
+  repeated string playerIds = 3;
+}
+
+message ScoreResult {
+  string playerId = 1;
+  int32 score = 2;
+}
+
+message Empty {}
