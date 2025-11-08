@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package ranking;
+
+service RankingService {
+  rpc UpdateScore (UpdateScoreRequest) returns (RankingResponse);
+  rpc GetRank (GetRankRequest) returns (RankResponse);
+  rpc GetGlobalRanking (GlobalRankingRequest) returns (GlobalRankingResponse);
+  rpc GetPlayerHistory (PlayerHistoryRequest) returns (PlayerHistoryResponse);
+}
+
+message UpdateScoreRequest {
+  int32 playerId = 1;
+  int32 points = 2;
+}
+
+message RankingResponse {
+  int32 playerId = 1;
+  string username = 2;
+  int32 score = 3;
+  int32 level = 4;
+  int32 position = 5;
+}
+
+message GetRankRequest {
+  int32 playerId = 1;
+}
+
+message RankResponse {
+  int32 position = 1;
+  int32 score = 2;
+}
+
+message GlobalRankingRequest {
+  int32 limit = 1;
+}
+
+message GlobalRankingResponse {
+  repeated RankingResponse rankings = 1;
+}
+
+message PlayerHistoryRequest {
+  int32 playerId = 1;
+}
+
+message PlayerHistoryResponse {
+  repeated MatchHistory history = 1;
+}
+
+message MatchHistory {
+  string result = 1;
+  int32 pointsDelta = 2;
+  string createdAt = 3;
+}
