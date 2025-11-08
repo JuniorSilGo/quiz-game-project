@@ -5,11 +5,27 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Room {
+  id          String   @id @default(uuid())
+  name        String
+  ownerId     String
+  status      String   @default("waiting") // waiting, in-progress, finished
+  players     Player[]
+  createdAt   DateTime @default(now())
+}
+
+model Player {
+  id       String   @id @default(uuid())
+  name     String
+  roomId   String?  // pode estar sem sala
+  room     Room?    @relation(fields: [roomId], references: [id])
+  createdAt DateTime @default(now())
 }
