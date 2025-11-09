@@ -12,7 +12,7 @@ async function bootstrap() {
         options: {
             package: 'auth',
             protoPath: join(process.cwd(), 'proto/auth.proto'),
-            url: `0.0.0.0:${process.env.GRPC_PORT || 50051}`,
+            url: `0.0.0.0:${process.env.GRPC_PORT || 50056}`,
         },
     });
     await app.startAllMicroservices();

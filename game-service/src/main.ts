@@ -9,11 +9,11 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, 'game.proto'),
       package: 'game',
-      url: '0.0.0.0:50052',
+      url: '0.0.0.0:50055',
     },
   });
 
   await app.listen();
-  console.log('GameService gRPC running on 0.0.0.0:50052');
+  console.log('GameService gRPC running on 0.0.0.0:50055');
 }
 bootstrap();

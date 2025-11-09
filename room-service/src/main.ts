@@ -9,11 +9,11 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, 'room.proto'),
       package: 'room',
-      url: '0.0.0.0:50051'
+      url: '0.0.0.0:50053'
     },
   });
 
   await app.listen();
-  console.log('🚀 Room Service (gRPC) rodando na porta 50051');
+  console.log('🚀 Room Service (gRPC) rodando na porta 50053');
 }
 bootstrap();
