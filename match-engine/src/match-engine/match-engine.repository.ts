@@ -1,39 +1,67 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, Match, MatchPlayer, Round, MatchSnapshot, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class MatchEngineRepository {
-  private prisma = new PrismaClient();
+export class MatchRepository {
+  public prisma = new PrismaClient();
 
-  async createMatch(data: Prisma.MatchCreateInput): Promise<Match> {
+  async disconnect() {
+    await this.prisma.$disconnect();
+  }
+
+  // MATCH
+  createMatch(data: any) {
     return this.prisma.match.create({ data });
   }
 
-  async getMatchByRoomId(roomId: number): Promise<Match | null> {
-    return this.prisma.match.findFirst({ where: { roomId } });
-  }
-
-  async createPlayer(matchPlayer: Prisma.MatchPlayerCreateInput) {
-    return this.prisma.matchPlayer.create({ data: matchPlayer });
-  }
-
-  async createRound(round: Prisma.RoundCreateInput | Prisma.RoundUncheckedCreateInput) {
-    return this.prisma.round.create({ data: round });
-  }
-  async saveSnapshot(matchId: number, state: any): Promise<MatchSnapshot> {
-    return this.prisma.matchSnapshot.create({
-      data: {
-        matchId,
-        state,
-        ttlAt: new Date(Date.now() + 60 * 1000), 
-      },
+  updateMatch(matchId: number, data: any) {
+    return this.prisma.match.update({
+      where: { id: matchId },
+      data,
     });
   }
 
-  async getSnapshot(matchId: number): Promise<MatchSnapshot | null> {
-    return this.prisma.matchSnapshot.findFirst({
+  findMatchByRoomId(roomId: number) {
+    return this.prisma.match.findFirst({
+      where: { roomId },
+    });
+  }
+
+  // PLAYERS
+  upsertMatchPlayer(matchId: number, playerId: number, data: any) {
+    return this.prisma.matchPlayer.upsert({
+      where: { matchId_playerId: { matchId, playerId } },
+      create: { matchId, playerId, ...data },
+      update: data,
+    });
+  }
+
+  updateMatchPlayerScore(matchId: number, playerId: number, points: number) {
+    return this.prisma.matchPlayer.update({
+      where: { matchId_playerId: { matchId, playerId } },
+      data: { score: { increment: points } },
+    });
+  }
+
+  findMatchPlayers(matchId: number) {
+    return this.prisma.matchPlayer.findMany({
       where: { matchId },
-      orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // ROUNDS
+  createRound(data: any) {
+    return this.prisma.round.create({ data });
+  }
+
+  findRoundById(roundId: number) {
+    return this.prisma.round.findUnique({
+      where: { id: roundId },
+    });
+  }
+
+  // PLAYER ANSWERS
+  createPlayerAnswer(data: any) {
+    return this.prisma.playerAnswer.create({ data });
   }
 }

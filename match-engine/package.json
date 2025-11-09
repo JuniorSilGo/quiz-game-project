@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "tsc && npm run copy-proto",
+    "build": "tsc && xcopy src\\grpc dist\\grpc /E /I /Y",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -21,8 +21,7 @@
     "copy-proto": "cpx \"src/grpc/**/*.proto\" dist/grpc",
     "start:grpc": "ts-node src/main.ts",
     "start:grpc:watch": "tsc-watch --onSuccess \"ts-node src/main.ts\" --project tsconfig.json",
-    "seed": "ts-node prisma/seeds/seed.ts",
-    "build": "tsc && xcopy src\\grpc dist\\grpc /E /I /Y"
+    "seed": "ts-node prisma/seeds/seed.ts"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.1",
@@ -31,9 +30,13 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/microservices": "^11.1.8",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/websockets": "^11.1.8",
     "@prisma/client": "^6.18.0",
+    "@types/ioredis": "^5.0.0",
+    "ioredis": "^5.8.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
