@@ -9,7 +9,7 @@ export class AuthController {
     @Post('login')
     async login(@Body() body: any) {
         const {data} = await this.http.axiosRef.post(
-            process.env.AUTH_HTTP_BASE + '/login',
+            process.env.AUTH_HTTP_BASE + '/auth/login',
             body,
         );
         return data;
@@ -18,7 +18,7 @@ export class AuthController {
     @Post('register')
     async register(@Body() body: any) {
         const {data} = await this.http.axiosRef.post(
-            process.env.AUTH_HTTP_BASE + '/register',
+            process.env.AUTH_HTTP_BASE + '/auth/register',
             body,
         );
         return data;

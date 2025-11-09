@@ -3,8 +3,8 @@ import {GrpcMethod} from '@nestjs/microservices';
 import {AuthService} from './auth.service';
 
 @Controller()
-export class GrpcAuthController {
-    constructor(private auth: AuthService) {
+export class AuthGrpcController {
+    constructor(private readonly auth: AuthService) {
     }
 
     @GrpcMethod('AuthService', 'ValidateToken')

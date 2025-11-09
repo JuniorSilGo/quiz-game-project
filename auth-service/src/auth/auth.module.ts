@@ -1,9 +1,9 @@
 import {Module} from '@nestjs/common';
 import {JwtModule} from '@nestjs/jwt';
 import {AuthService} from './auth.service';
-import {AuthController} from './auth.controller';
-import {GrpcAuthController} from './grpc.controller';
-import {PrismaClient} from '@prisma/client';
+import {AuthHttpController} from './auth.http.controller';
+import {AuthGrpcController} from './auth.grpc.controller';
+import {UserModule} from "../users/user.module";
 
 const expiresInSec = Number(process.env.JWT_EXPIRES_IN ?? 900);
 
@@ -13,9 +13,10 @@ const expiresInSec = Number(process.env.JWT_EXPIRES_IN ?? 900);
             secret: process.env.JWT_SECRET,
             signOptions: {expiresIn: expiresInSec},
         }),
+        UserModule
     ],
-    providers: [AuthService, PrismaClient],
-    controllers: [AuthController, GrpcAuthController],
+    providers: [AuthService],
+    controllers: [AuthHttpController, AuthGrpcController],
 })
 export class AuthModule {
 }
