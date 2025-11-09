@@ -10,9 +10,10 @@ service RankingService {
 }
 
 message UpdateScoreRequest {
-  int32 playerId = 1;
+  string token = 1;
   int32 points = 2;
 }
+
 
 message RankingResponse {
   int32 playerId = 1;

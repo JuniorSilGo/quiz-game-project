@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -9,13 +8,13 @@ datasource db {
 }
 
 model Ranking {
-  id           Int            @id @default(autoincrement())
-  playerId     Int            @unique
-  username     String
-  score        Int            @default(0)
-  level        Int            @default(1)
-  position     Int?
-  updatedAt    DateTime       @updatedAt
+  playerId   Int      @id
+  username   String
+  score      Int      @default(0)
+  level      Int      @default(1)
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   matchHistory MatchHistory[]
 }
 
@@ -25,5 +24,6 @@ model MatchHistory {
   result      String
   pointsDelta Int
   createdAt   DateTime @default(now())
-  player      Ranking  @relation(fields: [playerId], references: [playerId])
+  Ranking     Ranking  @relation(fields: [playerId], references: [playerId])
 }
+

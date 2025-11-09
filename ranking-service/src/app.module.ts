@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RankingController } from './ranking/ranking.controller';
-import { RankingService } from './ranking/ranking.service';
+import { RankingModule } from './ranking/ranking.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
-  controllers: [RankingController],
-  providers: [RankingService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    RankingModule,
+  ],
 })
 export class AppModule {}

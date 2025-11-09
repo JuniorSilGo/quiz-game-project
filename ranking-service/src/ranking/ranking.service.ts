@@ -1,111 +1,158 @@
-import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
-import { PrismaClient, Ranking, MatchHistory } from '../../generated/prisma';
+import {
+  Inject,
+  Injectable,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { PrismaService } from '../prisma/prisma.service';
+import { lastValueFrom, Observable } from 'rxjs';
+
+interface ValidateTokenRequest {
+  token: string;
+}
+
+interface ValidateTokenResponse {
+  valid: boolean;
+  userId?: string;
+  username?: string;
+  email?: string;
+  reason?: string;
+}
+
+interface AuthServiceGrpc {
+  ValidateToken(
+    data: ValidateTokenRequest,
+  ): Observable<ValidateTokenResponse>;
+}
 
 @Injectable()
-export class RankingService {
-  private readonly prisma = new PrismaClient();
-  private readonly logger = new Logger(RankingService.name);
-  private readonly playerServiceUrl = 'http://localhost:3000/api/players';
+export class RankingService implements OnModuleInit {
+  private authService: AuthServiceGrpc;
 
+  constructor(
+    @Inject('AUTH_PACKAGE') private readonly client: ClientGrpc,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async updateScore(playerId: number, points: number): Promise<Ranking> {
+  onModuleInit() {
+    this.authService = this.client.getService<AuthServiceGrpc>('AuthService');
+  }
+
+  async updateScore({
+    token,
+    points,
+  }: {
+    token: string;
+    points: number;
+  }) {
+    let res: ValidateTokenResponse;
+
     try {
-
-      const { data: player } = await axios.get<{
-        username: string;
-        level: number;
-      }>(`${this.playerServiceUrl}/${playerId}`);
-
-
-      const updated = await this.prisma.ranking.upsert({
-        where: { playerId },
-        update: {
-          score: { increment: points },
-          level: player.level,
-          username: player.username,
-        },
-        create: {
-          playerId,
-          username: player.username,
-          level: player.level,
-          score: points,
-        },
-      });
-
-      const rankings = await this.prisma.ranking.findMany({
-        orderBy: { score: 'desc' },
-      });
-
-      const position = rankings.findIndex((r) => r.playerId === playerId) + 1;
-
-      await this.prisma.ranking.update({
-        where: { playerId },
-        data: { position },
-      });
-
-
-      await this.prisma.matchHistory.create({
-        data: {
-          playerId,
-          result: points > 0 ? 'WIN' : 'LOSS',
-          pointsDelta: points,
-        },
-      });
-
-      this.logger.log(
-        `🏆 ${player.username} ganhou ${points} pontos — posição #${position}`,
+      res = await lastValueFrom(
+        this.authService.ValidateToken({ token }),
       );
-
-      return updated;
-    } catch (error: unknown) {
-      const err = error as any;
-
-
-      if ((axios as any).isAxiosError?.(err)) {
-        this.logger.error(
-          `Erro ao buscar jogador no PlayerService: ${err.message}`,
-        );
-      } else if (err instanceof Error) {
-        this.logger.error(`Erro inesperado: ${err.message}`);
-      } else {
-        this.logger.error('Erro desconhecido ao atualizar score.');
-      }
-
-      throw error;
+    } catch {
+      // Tipagem segura do catch
+      throw new UnauthorizedException(
+        'Erro de comunicação com o auth-service',
+      );
     }
-  }
 
+    if (!res.valid || !res.userId) {
+      throw new UnauthorizedException(
+        `Token inválido (${res.reason ?? 'unknown'})`,
+      );
+    }
 
-  async getGlobalRanking(limit = 10): Promise<Ranking[]> {
-    return this.prisma.ranking.findMany({
-      orderBy: { score: 'desc' },
-      take: limit,
-    });
-  }
+    const playerId = parseInt(res.userId, 10);
+    const username = res.username ?? 'Desconhecido';
 
-
-  async getPlayerHistory(playerId: number): Promise<MatchHistory[]> {
-    return this.prisma.matchHistory.findMany({
+    const updated = await this.prisma.ranking.upsert({
       where: { playerId },
-      orderBy: { createdAt: 'desc' },
+      update: {
+        score: { increment: points },
+        username,
+      },
+      create: {
+        playerId,
+        username,
+        level: 1,
+        score: points,
+        position: 0,
+      },
     });
+
+    const allRankings = await this.prisma.ranking.findMany({
+      orderBy: { score: 'desc' },
+    });
+
+    const position = allRankings.findIndex((r) => r.playerId === playerId) + 1;
+
+    await this.prisma.ranking.update({
+      where: { playerId },
+      data: { position },
+    });
+
+    await this.prisma.matchHistory.create({
+      data: {
+        playerId,
+        result: points > 0 ? 'WIN' : 'LOSS',
+        pointsDelta: points,
+      },
+    });
+
+    return {
+      playerId,
+      username,
+      score: updated.score,
+      position,
+    };
   }
 
-
-  async getRank(
-    playerId: number,
-  ): Promise<{ position: number; score: number }> {
+  async getRank(playerId: number) {
     const player = await this.prisma.ranking.findUnique({
       where: { playerId },
     });
 
-    if (!player) throw new Error('Jogador não encontrado no ranking.');
-
+    if (!player) {
+      throw new UnauthorizedException('Usuário não encontrado');
+    }
 
     return {
       position: player.position ?? 0,
       score: player.score,
+    };
+  }
+
+  async getGlobalRanking(limit: number) {
+    const rankings = await this.prisma.ranking.findMany({
+      orderBy: { score: 'desc' },
+      take: limit,
+    });
+
+    return {
+      rankings: rankings.map((r) => ({
+        playerId: r.playerId,
+        username: r.username,
+        score: r.score,
+        position: r.position ?? 0,
+      })),
+    };
+  }
+
+  async getPlayerHistory(playerId: number) {
+    const history = await this.prisma.matchHistory.findMany({
+      where: { playerId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      history: history.map((h) => ({
+        result: h.result,
+        pointsDelta: h.pointsDelta,
+        createdAt: h.createdAt.toISOString(),
+      })),
     };
   }
 }
