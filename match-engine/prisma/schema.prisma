@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-
 }
 
 datasource db {
@@ -26,7 +25,7 @@ model MatchEvent {
   id        Int      @id @default(autoincrement())
   matchId   Int
   match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  type      String   
+  type      String
   payload   Json
   emittedBy Int?
   emittedAt DateTime @default(now())
@@ -36,11 +35,11 @@ model MatchEvent {
 }
 
 model MatchSnapshot {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   matchId   Int
-  match     Match    @relation(fields: [matchId], references: [id])
+  match     Match     @relation(fields: [matchId], references: [id])
   state     Json
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   ttlAt     DateTime?
 
   @@index([matchId])
@@ -48,42 +47,42 @@ model MatchSnapshot {
 }
 
 model Match {
-  id             Int             @id @default(autoincrement())
-  externalId     String?         @unique
-  roomId         Int
-  mode           String
-  status         MatchStatus     @default(PENDING)
-  currentRound   Int             @default(0)
-  totalRounds    Int             @default(10)
-  startedAt      DateTime?
-  endedAt        DateTime?
-  timeLimitSec   Int             @default(30)
-  createdBy      Int?
-  players        MatchPlayer[]
-  rounds         Round[]
-  events         MatchEvent[]
-  snapshots      MatchSnapshot[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id           Int             @id @default(autoincrement())
+  externalId   String?         @unique
+  roomId       Int
+  mode         String
+  status       MatchStatus     @default(PENDING)
+  currentRound Int             @default(0)
+  totalRounds  Int             @default(10)
+  startedAt    DateTime?
+  endedAt      DateTime?
+  timeLimitSec Int             @default(30)
+  createdBy    Int?
+  players      MatchPlayer[]
+  rounds       Round[]
+  events       MatchEvent[]
+  snapshots    MatchSnapshot[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   @@index([roomId])
   @@index([status])
 }
 
 model MatchPlayer {
-  id             Int      @id @default(autoincrement())
+  id             Int            @id @default(autoincrement())
   matchId        Int
-  match          Match    @relation(fields: [matchId], references: [id])
+  match          Match          @relation(fields: [matchId], references: [id])
   playerId       Int
   username       String?
   avatar         String?
-  score          Int      @default(0)
-  totalXp        BigInt   @default(0)
-  correctAnswers Int      @default(0)
-  wrongAnswers   Int      @default(0)
-  joinedAt       DateTime @default(now())
+  score          Int            @default(0)
+  totalXp        BigInt         @default(0)
+  correctAnswers Int            @default(0)
+  wrongAnswers   Int            @default(0)
+  joinedAt       DateTime       @default(now())
   leftAt         DateTime?
-  isActive       Boolean  @default(true)
+  isActive       Boolean        @default(true)
   answers        PlayerAnswer[]
 
   @@unique([matchId, playerId])
@@ -91,44 +90,44 @@ model MatchPlayer {
 }
 
 model Round {
-  id             Int      @id @default(autoincrement())
-  matchId        Int
-  match          Match    @relation(fields: [matchId], references: [id])
-  index          Int
-  questionId     Int?
-  startedAt      DateTime?
-  endedAt        DateTime?
-  timeLimitSec   Int
+  id              Int       @id @default(autoincrement())
+  matchId         Int
+  match           Match     @relation(fields: [matchId], references: [id])
+  index           Int
+  questionId      Int?
+  startedAt       DateTime?
+  endedAt         DateTime?
+  timeLimitSec    Int
   correctAnswerId Int?
-  roundResult    Json?
-  createdAt      DateTime @default(now())
+  roundResult     Json?
+  createdAt       DateTime  @default(now())
 
-  answers        PlayerAnswer[]
+  answers PlayerAnswer[]
 
   @@unique([matchId, index])
   @@index([questionId])
 }
 
 model PlayerAnswer {
-  id            Int      @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   roundId       Int
-  round         Round    @relation(fields: [roundId], references: [id])
+  round         Round       @relation(fields: [roundId], references: [id])
   matchPlayerId Int
   matchPlayer   MatchPlayer @relation(fields: [matchPlayerId], references: [id])
   playerId      Int
   answerId      Int
   isCorrect     Boolean?
   timeMs        Int?
-  pointsAwarded Int      @default(0)
-  createdAt     DateTime @default(now())
+  pointsAwarded Int         @default(0)
+  createdAt     DateTime    @default(now())
 
   @@index([playerId])
   @@index([roundId])
 }
 
 model MatchHistory {
-  id             Int      @id @default(autoincrement())
-  matchId        Int      @unique
+  id             Int       @id @default(autoincrement())
+  matchId        Int       @unique
   roomId         Int
   winnerPlayerId Int?
   totalRounds    Int
@@ -136,5 +135,5 @@ model MatchHistory {
   startedAt      DateTime?
   endedAt        DateTime?
   summary        Json?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 }

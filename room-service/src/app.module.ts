@@ -24,8 +24,8 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'MATCH_ENGINE_PACKAGE',
         transport: Transport.GRPC,
         options: {
-          package: 'game',
-          protoPath: join(process.cwd(), 'src/game.proto'),
+          package: 'match_engine',
+          protoPath: join(process.cwd(), 'src/match_engine.proto'),
           url: process.env.MATCH_ENGINE_URL || 'localhost:50051',
         },
       },

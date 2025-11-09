@@ -9,6 +9,7 @@ import type { RankingServiceClient } from '../grpc/interfaces/ranking.grpc.inter
 import type { RoomServiceClient } from '../grpc/interfaces/room.grpc.interface';
 
 @Injectable()
+
 export class MatchService implements OnModuleDestroy {
   private readonly logger = new Logger(MatchService.name);
 
@@ -162,5 +163,13 @@ export class MatchService implements OnModuleDestroy {
 
   onModuleDestroy() {
     this.repo.disconnect();
+  }
+
+  createMatch(data: { roomId: string; players: string[] }) {
+    console.log("[MATCH ENGINE] creating match", data);
+    return {
+      matchId: "match-" + Date.now(),
+      status: "CREATED",
+    };
   }
 }
