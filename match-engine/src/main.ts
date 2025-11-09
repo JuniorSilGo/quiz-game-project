@@ -25,13 +25,13 @@ async function bootstrap() {
       options: {
         package: 'match_engine', 
         protoPath: protoPath,
-        url: 'localhost:50053',
+        url: 'localhost:50051',
       },
     },
   );
 
   await app.listen();
-  console.log('Match-engine gRPC rodando em localhost:50053');
+  console.log('Match-engine gRPC rodando em localhost:50051');
 }
 
 bootstrap();

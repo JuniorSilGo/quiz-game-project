@@ -21,4 +21,9 @@ export class MatchEngineController {
   getState(dto: GetStateDto) {
     return this.service.getState(dto);
   }
+
+  @GrpcMethod('MatchService', 'CreateMatch')
+    createMatch(data: { roomId: string; players: string[] }) {
+    return this.service.createMatch(data);
+  }
 }

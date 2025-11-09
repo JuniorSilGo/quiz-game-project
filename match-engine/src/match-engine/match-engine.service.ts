@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MatchEngineService {
-  constructor(private readonly repo: MatchEngineRepository) {}
+  constructor(private readonly repo: MatchEngineRepository) { }
 
   async startMatch(dto: CreateMatchEngineDto) {
     const match = await this.repo.createMatch({
@@ -25,5 +25,13 @@ export class MatchEngineService {
 
   async getState(dto: GetStateDto) {
     return this.repo.getSnapshot(dto.roomId);
+  }
+
+  createMatch(data: { roomId: string; players: string[] }) {
+    console.log("[MATCH ENGINE] creating match", data);
+    return {
+      matchId: "match-" + Date.now(),
+      status: "CREATED",
+    };
   }
 }
