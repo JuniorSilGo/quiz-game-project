@@ -60,4 +60,11 @@ export class MatchRepository {
   createPlayerAnswer(data: any) {
     return this.prisma.playerAnswer.create({ data });
   }
+
+  findMatchById(matchId: number) {
+  return this.prisma.match.findUnique({
+    where: { id: matchId },
+  });
+}
+
 }

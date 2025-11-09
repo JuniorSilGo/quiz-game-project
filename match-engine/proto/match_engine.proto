@@ -2,6 +2,16 @@ syntax = "proto3";
 
 package match_engine;
 
+message CreateMatchRequest {
+  string roomId = 1;
+  repeated string players = 2;
+}
+
+message CreateMatchResponse {
+  string matchId = 1;
+  string status = 2;
+}
+
 message StartMatchRequest {
   int32 roomId = 1;
 }
@@ -55,4 +65,5 @@ service MatchEngineService {
   rpc StartMatch(StartMatchRequest) returns (StartMatchResponse);
   rpc SubmitAnswer(SubmitAnswerRequest) returns (SubmitAnswerResponse);
   rpc GetState(GetStateRequest) returns (MatchStateResponse);
+  rpc CreateMatch (CreateMatchRequest) returns (CreateMatchResponse);
 }

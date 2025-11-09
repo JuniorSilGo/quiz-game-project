@@ -114,24 +114,24 @@ export class MatchService implements OnModuleDestroy {
     return { ok: true, answerId: answer.id };
   }
 
-  async getState(roomId: number) {
-    const match = await this.repo.findMatchByRoomId(roomId);
-    if (!match) return null;
+ async getState(matchId: number) {
+  const match = await this.repo.findMatchById(matchId); 
+  if (!match) return null;
 
-    const players = await this.repo.findMatchPlayers(match.id);
+  const players = await this.repo.findMatchPlayers(match.id);
 
-    return {
-      matchId: match.id,
-      roomId: match.roomId,
-      status: match.status,
-      currentRound: match.currentRound,
-      players: players.map(p => ({
-        id: p.playerId,
-        username: p.username,
-        score: p.score,
-      })),
-    };
-  }
+  return {
+    matchId: match.id,
+    status: match.status,
+    currentRound: match.currentRound,
+    totalRounds: match.totalRounds,
+    players: players.map(p => ({
+      playerId: p.playerId,
+      username: p.username,
+      score: p.score,
+    })),
+  };
+}
 
   async endMatch(matchId: number, roomId: number) {
     await this.repo.updateMatch(matchId, {
@@ -144,5 +144,13 @@ export class MatchService implements OnModuleDestroy {
 
   onModuleDestroy() {
     this.repo.disconnect();
+  }
+
+  createMatch(data: { roomId: string; players: string[] }) {
+    console.log("[MATCH ENGINE] creating match", data);
+    return {
+      matchId: "match-" + Date.now(),
+      status: "CREATED",
+    };
   }
 }

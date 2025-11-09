@@ -27,8 +27,15 @@ export class MatchController {
   }
 
   @GrpcMethod('MatchEngineService', 'GetState')
-  async getState(payload: { roomId: number }) {
-    const state = await this.service.getState(payload.roomId);
-    return { state };
+  async getState(payload: { matchId: number }) {
+  const state = await this.service.getState(payload.matchId);
+  return state;
   }
+
+
+    @GrpcMethod('MatchEngineService', 'CreateMatch')
+    createMatch(data: { roomId: string; players: string[] }) {
+      return this.service.createMatch(data);
+    }
+
 }
