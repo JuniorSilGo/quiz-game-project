@@ -1,24 +1,35 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { MatchEngineService } from './match-engine.service';
-import { CreateMatchEngineDto, SubmitAnswerDto, GetStateDto } from './dto/create-match-engine.dto';
+import { MatchService } from './match-engine.service';
 
 @Controller()
-export class MatchEngineController {
-  constructor(private readonly service: MatchEngineService) {}
+export class MatchController {
+  private readonly logger = new Logger(MatchController.name);
+
+  constructor(private readonly service: MatchService) {}
 
   @GrpcMethod('MatchEngineService', 'StartMatch')
-  startMatch(dto: CreateMatchEngineDto) {
-    return this.service.startMatch(dto);
+  async startMatch(data: { roomId: number; totalRounds?: number; timeLimitSec?: number; createdBy?: number }) {
+    this.logger.log(`gRPC StartMatch called for room ${data.roomId}`);
+    const match = await this.service.startMatch(data.roomId, {
+      totalRounds: data.totalRounds,
+      timeLimitSec: data.timeLimitSec,
+      createdBy: data.createdBy,
+    } as any);
+    return { matchId: match.id, status: match.status };
   }
 
   @GrpcMethod('MatchEngineService', 'SubmitAnswer')
-  submitAnswer(dto: SubmitAnswerDto) {
-    return this.service.submitAnswer(dto);
+  async submitAnswer(payload: any) {
+    // payload should contain roomId and CreatePlayerAnswerDto fields
+    const { roomId, ...dto } = payload;
+    const res = await this.service.submitAnswer(roomId, dto);
+    return res;
   }
 
   @GrpcMethod('MatchEngineService', 'GetState')
-  getState(dto: GetStateDto) {
-    return this.service.getState(dto);
+  async getState(payload: { roomId: number }) {
+    const state = await this.service.getState(payload.roomId);
+    return { state };
   }
 }
