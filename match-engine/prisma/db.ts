@@ -1,11 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
-async function getMatch() {
-  const match = await prisma.match.findMany();
-  console.log(match);
+async function getPlayer() {
+  const players = await prisma.player.findMany();
+  console.log(players);
 }
 
-getMatch()
+getPlayer()
   .catch((e) => console.error(e))
   .finally(async () => await prisma.$disconnect());

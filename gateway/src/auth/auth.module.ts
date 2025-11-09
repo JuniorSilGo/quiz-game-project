@@ -29,7 +29,7 @@ import {APP_FILTER} from "@nestjs/core";
     providers: [
         AuthGrpcClient,
         {
-            provide: APP_FILTER,          // ← token mágico do NestJS
+            provide: APP_FILTER,
             useClass: AxiosExceptionFilter,
         },
     ]
