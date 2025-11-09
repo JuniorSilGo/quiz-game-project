@@ -20,9 +20,6 @@ export class MatchService implements OnModuleDestroy {
     @Inject('ROOM_SERVICE') private readonly roomClient: RoomServiceClient,
   ) {}
 
-  //
-  // START MATCH
-  //
   async startMatch(roomId: number, dto?: Partial<CreateMatchDto>) {
     const room = await this.roomClient.getRoom({ roomId });
 
@@ -52,9 +49,6 @@ export class MatchService implements OnModuleDestroy {
     return match;
   }
 
-  //
-  // EMIT NEXT QUESTION
-  //
   private async emitNextQuestion(matchId: number, roomId: number, roundIndex: number) {
     const question = await this.questionClient.fetchQuestion({ roomId, roundIndex });
 
@@ -77,9 +71,6 @@ export class MatchService implements OnModuleDestroy {
     this.gateway.emitNewQuestion(roomId, payload);
   }
 
-  //
-  // SUBMIT ANSWER
-  //
   async submitAnswer(roomId: number, dto: CreatePlayerAnswerDto) {
     const answer = await this.repo.createPlayerAnswer({
       roundId: dto.roundId,
@@ -91,7 +82,6 @@ export class MatchService implements OnModuleDestroy {
       pointsAwarded: dto.pointsAwarded ?? 0,
     });
 
-    // 🔥 Buscar matchId via round
     const round = await this.repo.findRoundById(dto.roundId);
 
     if (!round) {
@@ -101,8 +91,6 @@ export class MatchService implements OnModuleDestroy {
 
     const matchId = round.matchId;
 
-
-    // atualizar score
     await this.repo.updateMatchPlayerScore(
       matchId,
       dto.playerId,
@@ -126,9 +114,6 @@ export class MatchService implements OnModuleDestroy {
     return { ok: true, answerId: answer.id };
   }
 
-  //
-  // GET STATE
-  //
   async getState(roomId: number) {
     const match = await this.repo.findMatchByRoomId(roomId);
     if (!match) return null;
@@ -148,9 +133,6 @@ export class MatchService implements OnModuleDestroy {
     };
   }
 
-  //
-  // END MATCH
-  //
   async endMatch(matchId: number, roomId: number) {
     await this.repo.updateMatch(matchId, {
       status: 'FINISHED',

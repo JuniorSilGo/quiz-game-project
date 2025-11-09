@@ -21,7 +21,6 @@ export class MatchController {
 
   @GrpcMethod('MatchEngineService', 'SubmitAnswer')
   async submitAnswer(payload: any) {
-    // payload should contain roomId and CreatePlayerAnswerDto fields
     const { roomId, ...dto } = payload;
     const res = await this.service.submitAnswer(roomId, dto);
     return res;

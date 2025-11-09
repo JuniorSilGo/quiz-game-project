@@ -9,7 +9,6 @@ import * as path from 'path';
 @Global()
 @Module({
   imports: [
-    // Example gRPC client registration (replace proto paths with reais)
     ClientsModule.register([
       {
         name: 'ROOM_SERVICE',
