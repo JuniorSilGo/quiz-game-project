@@ -25,7 +25,7 @@ async function bootstrap() {
       options: {
         package: 'match_engine', 
         protoPath: protoPath,
-        url: 'localhost:50051',
+        url: 'localhost:50053',
       },
     },
   );

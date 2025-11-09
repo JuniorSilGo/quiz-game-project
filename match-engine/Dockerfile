@@ -4,13 +4,14 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
+
+COPY proto ./proto
 
 COPY . .
 
 RUN npm run build
 
-# definir uma porta para cada microserviço.
-EXPOSE 3000
+EXPOSE 3002 50052
 
 CMD ["node", "dist/main"]

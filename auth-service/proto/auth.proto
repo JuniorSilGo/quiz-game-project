@@ -7,6 +7,7 @@ service AuthService {
 
 service UserService {
   rpc RecordMatch (RecordMatchRequest) returns (UserActionResponse);
+  rpc GetUser     (GetUserRequest)     returns (User);
 }
 
 message ValidateTokenRequest {
@@ -26,6 +27,8 @@ message RecordMatchRequest {
   bool  didWin = 2;
 }
 
+message GetUserRequest { int32 userId = 1; }
+
 message UserActionResponse {
   bool   success = 1;
   int32  userId = 2;
@@ -33,4 +36,14 @@ message UserActionResponse {
   int32  wins = 4;
   int32  matchesPlayed = 5;
   string updatedAt = 6;
+}
+
+message User {
+  int32  id             = 1;
+  string username       = 2;
+  string email          = 3;
+  int32  wins           = 4;
+  int32  matchesPlayed  = 5;
+  string createdAt      = 6;
+  string updatedAt      = 7;
 }

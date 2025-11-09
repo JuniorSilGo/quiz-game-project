@@ -30,6 +30,7 @@ export class UserService {
             wins: user.wins,
             matchesPlayed: user.matchesPlayed,
             updatedAt: user.updatedAt,
+            createdAt: user.createdAt
         };
     }
 
