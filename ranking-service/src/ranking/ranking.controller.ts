@@ -1,28 +1,34 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { RankingService } from './ranking.service';
 
 @Controller()
-export class RankingController {
+export class RankingController { 
+  private readonly logger = new Logger(RankingController.name);
+
   constructor(private readonly rankingService: RankingService) {}
 
   @GrpcMethod('RankingService', 'UpdateScore')
-  updateScore(data: { token: string; points: number }) {
+  async updateScore(data: { userId: string; points: number; username?: string }) {
+    this.logger.log(`Recebido UpdateScore: userId=${data.userId}, points=${data.points}`);
     return this.rankingService.updateScore(data);
   }
 
   @GrpcMethod('RankingService', 'GetRank')
-  getRank(data: { playerId: number }) {
-    return this.rankingService.getRank(data.playerId);
+  async getRank(data: { userId: string }) {
+    this.logger.log(`Recebido GetRank: userId=${data.userId}`);
+    return this.rankingService.getRank(data);
   }
 
   @GrpcMethod('RankingService', 'GetGlobalRanking')
-  getGlobalRanking(data: { limit: number }) {
-    return this.rankingService.getGlobalRanking(data.limit || 10);
+  async getGlobalRanking(data: { limit?: number }) {
+    this.logger.log(`Recebido GetGlobalRanking: limit=${data.limit ?? 10}`);
+    return this.rankingService.getTopRankings(data.limit ?? 10);
   }
 
   @GrpcMethod('RankingService', 'GetPlayerHistory')
-  getPlayerHistory(data: { playerId: number }) {
-    return this.rankingService.getPlayerHistory(data.playerId);
+  async getPlayerHistory(data: { userId: string }) {
+    this.logger.log(`Recebido GetPlayerHistory: userId=${data.userId}`);
+    return this.rankingService.getPlayerHistory(data.userId);
   }
 }

@@ -1,24 +1,25 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { RankingModule } from './ranking/ranking.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { AuthClientService } from './auth.client.service';
+import { AuthGuard } from './auth.guard';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
     ClientsModule.register([
       {
         name: 'AUTH_PACKAGE',
         transport: Transport.GRPC,
         options: {
           package: 'auth',
-          protoPath: join(__dirname, 'proto/auth.proto'),
+
+          protoPath: join(process.cwd(), 'src/proto/auth.proto'),
           url: process.env.AUTH_GRPC_URL || 'localhost:50051',
         },
       },
     ]),
-    RankingModule,
   ],
+  providers: [AuthClientService, AuthGuard],
+  exports: [AuthClientService, AuthGuard],
 })
-export class AppModule {}
+export class AuthModule {}
