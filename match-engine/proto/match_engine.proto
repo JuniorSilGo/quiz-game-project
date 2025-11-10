@@ -23,11 +23,6 @@ message StartMatchResponse {
   repeated PlayerInfo players = 4;
 }
 
-/*
-  ALTERAÇÃO PRINCIPAL:
-  - Inclui roundId e matchPlayerId e roomId e campos opcionais para enviar
-    a informação completa necessária ao Match Engine para persistir a resposta.
-*/
 message SubmitAnswerRequest {
   int32 roomId = 1;        
   int32 matchId = 2;      
@@ -43,7 +38,7 @@ message SubmitAnswerRequest {
 message SubmitAnswerResponse {
   bool success = 1;
   string message = 2;
-  int32 score = 3; // score atual do jogador na partida
+  int32 score = 3; 
 }
 
 message GetStateRequest {
