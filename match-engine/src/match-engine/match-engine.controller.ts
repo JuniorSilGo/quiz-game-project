@@ -21,21 +21,30 @@ export class MatchController {
 
   @GrpcMethod('MatchEngineService', 'SubmitAnswer')
   async submitAnswer(payload: any) {
+    this.logger.log(`gRPC SubmitAnswer called: ${JSON.stringify(payload)}`);
     const { roomId, ...dto } = payload;
+
+    if (!dto.roundId) {
+      this.logger.error('SubmitAnswer chamado sem roundId');
+      return { success: false, message: 'roundId é obrigatório', score: 0 };
+    }
+    if (!dto.playerId) {
+      this.logger.error('SubmitAnswer chamado sem playerId');
+      return { success: false, message: 'playerId é obrigatório', score: 0 };
+    }
+
     const res = await this.service.submitAnswer(roomId, dto);
     return res;
   }
 
   @GrpcMethod('MatchEngineService', 'GetState')
   async getState(payload: { matchId: number }) {
-  const state = await this.service.getState(payload.matchId);
-  return state;
+    const state = await this.service.getState(payload.matchId);
+    return state;
   }
 
-
-    @GrpcMethod('MatchEngineService', 'CreateMatch')
-    createMatch(data: { roomId: string; players: string[] }) {
-      return this.service.createMatch(data);
-    }
-
+  @GrpcMethod('MatchEngineService', 'CreateMatch')
+  createMatch(data: { roomId: string; players: string[] }) {
+    return this.service.createMatch(data);
+  }
 }
