@@ -7,7 +7,7 @@ const packageDef = protoLoader.loadSync(protoPath);
 const grpcObject = grpc.loadPackageDefinition(packageDef) as any;
 
 const client = new grpcObject.match_engine.MatchEngineService(
-  'localhost:50053',
+  'localhost:50054',
   grpc.credentials.createInsecure()
 );
 
