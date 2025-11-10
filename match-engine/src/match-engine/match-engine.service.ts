@@ -9,6 +9,7 @@ import type { RankingServiceClient } from '../grpc/interfaces/ranking.grpc.inter
 import type { RoomServiceClient } from '../grpc/interfaces/room.grpc.interface';
 
 @Injectable()
+
 export class MatchService implements OnModuleDestroy {
   private readonly logger = new Logger(MatchService.name);
 

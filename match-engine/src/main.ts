@@ -32,6 +32,7 @@ async function bootstrap() {
 
   await app.listen();
   console.log('Match-engine gRPC rodando em localhost:50051');
+  console.log('Match-engine gRPC rodando em localhost:50051');
 }
 
 bootstrap();

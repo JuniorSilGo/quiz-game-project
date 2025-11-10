@@ -47,4 +47,9 @@ export class MatchController {
   createMatch(data: { roomId: string; players: string[] }) {
     return this.service.createMatch(data);
   }
+
+  @GrpcMethod('MatchService', 'CreateMatch')
+    createMatch(data: { roomId: string; players: string[] }) {
+    return this.service.createMatch(data);
+  }
 }
