@@ -1,0 +1,21 @@
+@startuml
+title C3 - Componentes do Match Engine
+
+rectangle "MatchEngine Service" {
+
+  component "gRPC Controller" as GRPC
+  component "MatchService" as Service
+  component "MatchRepository" as Repo
+  component "ScoringStrategy\n(Strategy Pattern)" as Strategy
+  component "MatchGateway\n(WebSocket)" as WS
+  component "EventPublisher\n" as MQPublisher
+
+}
+
+GRPC --> Service : submitAnswer()\nstartMatch()
+Service --> Repo : salvar estado\nbuscar estado
+Service --> Strategy : calcular pontos
+Service --> MQPublisher : publicar eventos
+Service --> WS : emitir updates em tempo real
+
+@enduml

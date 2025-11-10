@@ -1,0 +1,35 @@
+@startuml
+title C1 - Contexto do Sistema: Quiz Gamer Project
+
+actor Jogador as User
+
+rectangle "Frontend (Web/App)" as FE
+rectangle "API Gateway (Kong + GraphQL)" as Gateway
+
+User --> FE : Interage\nResponder perguntas\nVer ranking
+FE --> Gateway : GraphQL
+
+rectangle "Auth Service" as Auth
+rectangle "Room Service" as Room
+rectangle "Question Service" as Question
+rectangle "Match Engine" as Match
+rectangle "Ranking Service" as Ranking
+rectangle "Game Service" as Game
+
+Gateway --> Auth : REST/GraphQL
+Gateway --> Room : gRPC
+Gateway --> Match : gRPC
+Gateway --> Ranking : gRPC
+Gateway --> Game : gRPC
+
+Room --> Match : Evento: sala criada/join
+Match --> Ranking : Evento: scoreUpdate 
+Match --> Game : Evento: roundResult 
+
+Question --> Match : gRPC 
+Game --> Postgres : Persistência
+Ranking --> Postgres : Armazena ranking
+Auth --> Postgres : Usuários
+Room --> Postgres : Salas
+
+@enduml
