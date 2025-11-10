@@ -26,12 +26,12 @@ services:
     ports: [ "3000:3000", "50050:50050" ]
     networks: [ quiz-net ]
 
-  match-engine:
-    build: ./match-engine
-    container_name: match-engine
-    depends_on: [ gateway ]
-    ports: [ "3002:3002", "50052:50052" ]
-    networks: [ quiz-net ]
+#  match-engine:
+#    build: ./match-engine
+#    container_name: match-engine
+#    depends_on: [ gateway ]
+#    ports: [ "3002:3002", "50052:50052" ]
+#    networks: [ quiz-net ]
 
   kong:
     image: kong:3.5

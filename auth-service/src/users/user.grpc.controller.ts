@@ -12,4 +12,8 @@ export class UserGrpcController {
         return this.user.getById(userId)
     }
 
+    @GrpcMethod('UserService', 'RecordMatch')
+    async recordMatch({userId, didWin}: { userId: number; didWin: boolean }) {
+        return this.user.recordMatch(userId, didWin);
+    }
 }

@@ -46,13 +46,5 @@ export class AuthService {
             return {valid: false, reason: 'invalid_or_expired'};
         }
     }
-
-    async incrementWins(userId: number): Promise<User> {
-        return this.repository.incrementWins(userId);
-    }
-
-    async incrementMatches(userId: number): Promise<User> {
-        return this.repository.incrementMatches(userId);
-    }
 }
 
