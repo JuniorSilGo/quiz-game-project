@@ -1,111 +1,109 @@
-import { Injectable, Logger } from '@nestjs/common';
-import axios from 'axios';
-import { PrismaClient, Ranking, MatchHistory } from '../../generated/prisma';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class RankingService {
   private readonly prisma = new PrismaClient();
   private readonly logger = new Logger(RankingService.name);
-  private readonly playerServiceUrl = 'http://localhost:3000/api/players';
 
+  // 🟢 Atualiza ou cria ranking baseado no userId
+  async updateScore(payload: { userId: string; points: number; username?: string }) {
+    const { userId, points, username } = payload;
 
-  async updateScore(playerId: number, points: number): Promise<Ranking> {
-    try {
+    if (!userId) throw new NotFoundException('userId é obrigatório');
 
-      const { data: player } = await axios.get<{
-        username: string;
-        level: number;
-      }>(`${this.playerServiceUrl}/${playerId}`);
+    // Procura o jogador pelo userId
+    let ranking = await this.prisma.ranking.findUnique({ where: { userId } });
 
-
-      const updated = await this.prisma.ranking.upsert({
-        where: { playerId },
-        update: {
-          score: { increment: points },
-          level: player.level,
-          username: player.username,
-        },
-        create: {
-          playerId,
-          username: player.username,
-          level: player.level,
-          score: points,
-        },
-      });
-
-      const rankings = await this.prisma.ranking.findMany({
-        orderBy: { score: 'desc' },
-      });
-
-      const position = rankings.findIndex((r) => r.playerId === playerId) + 1;
-
-      await this.prisma.ranking.update({
-        where: { playerId },
-        data: { position },
-      });
-
-
-      await this.prisma.matchHistory.create({
+    if (ranking) {
+      // Atualiza score e level
+      ranking = await this.prisma.ranking.update({
+        where: { userId },
         data: {
-          playerId,
-          result: points > 0 ? 'WIN' : 'LOSS',
-          pointsDelta: points,
+          score: ranking.score + points,
+          level: Math.floor((ranking.score + points) / 100) + 1,
+          username: username ?? ranking.username,
         },
       });
-
-      this.logger.log(
-        `🏆 ${player.username} ganhou ${points} pontos — posição #${position}`,
-      );
-
-      return updated;
-    } catch (error: unknown) {
-      const err = error as any;
-
-
-      if ((axios as any).isAxiosError?.(err)) {
-        this.logger.error(
-          `Erro ao buscar jogador no PlayerService: ${err.message}`,
-        );
-      } else if (err instanceof Error) {
-        this.logger.error(`Erro inesperado: ${err.message}`);
-      } else {
-        this.logger.error('Erro desconhecido ao atualizar score.');
-      }
-
-      throw error;
+    } else {
+      // Cria novo jogador no ranking
+      ranking = await this.prisma.ranking.create({
+        data: {
+          userId,
+          username: username ?? 'unknown',
+          score: points,
+          level: Math.floor(points / 100) + 1,
+        },
+      });
     }
-  }
 
-
-  async getGlobalRanking(limit = 10): Promise<Ranking[]> {
-    return this.prisma.ranking.findMany({
-      orderBy: { score: 'desc' },
-      take: limit,
-    });
-  }
-
-
-  async getPlayerHistory(playerId: number): Promise<MatchHistory[]> {
-    return this.prisma.matchHistory.findMany({
-      where: { playerId },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
-
-
-  async getRank(
-    playerId: number,
-  ): Promise<{ position: number; score: number }> {
-    const player = await this.prisma.ranking.findUnique({
-      where: { playerId },
-    });
-
-    if (!player) throw new Error('Jogador não encontrado no ranking.');
-
+    this.logger.log(`Score atualizado: ${ranking.username} (+${points})`);
 
     return {
-      position: player.position ?? 0,
-      score: player.score,
+      userId: ranking.userId,
+      username: ranking.username,
+      score: ranking.score,
+      level: ranking.level,
+      position: 0, // calculado depois
     };
+  }
+
+  // 🟡 Retorna posição e score do jogador (GetRank)
+  async getRank(payload: { userId: string }) {
+    const { userId } = payload;
+
+    const ranking = await this.prisma.ranking.findUnique({ where: { userId } });
+    if (!ranking) throw new NotFoundException('Ranking não encontrado');
+
+    const higher = await this.prisma.ranking.count({
+      where: { score: { gt: ranking.score } },
+    });
+
+    return {
+      userId: ranking.userId,
+      username: ranking.username,
+      position: higher + 1,
+      score: ranking.score,
+      level: ranking.level,
+    };
+  }
+
+  // 🔵 Retorna o ranking global (GetGlobalRanking)
+  async getTopRankings(limit = 10) {
+    const rankings = await this.prisma.ranking.findMany({
+      take: limit,
+      orderBy: { score: 'desc' },
+    });
+
+    return {
+      rankings: rankings.map((r, index) => ({
+        userId: r.userId,
+        username: r.username,
+        score: r.score,
+        level: r.level,
+        position: index + 1,
+      })),
+    };
+  }
+
+  // 🟣 Retorna histórico de partidas do jogador (mock)
+  async getPlayerHistory(userId: string) {
+    const ranking = await this.prisma.ranking.findUnique({ where: { userId } });
+    if (!ranking) throw new NotFoundException('Jogador não encontrado');
+
+    const history = [
+      {
+        result: 'Vitória',
+        pointsDelta: +15,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        result: 'Derrota',
+        pointsDelta: -8,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+      },
+    ];
+
+    return { history };
   }
 }
