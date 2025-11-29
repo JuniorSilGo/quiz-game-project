@@ -11,7 +11,7 @@ async function bootstrap() {
       options: {
         package: 'question',
         protoPath: join(process.cwd(), 'src', 'proto', 'question.proto'),
-        url: '0.0.0.0:50051',
+        url: '0.0.0.0:50054',
       },
     },
   );

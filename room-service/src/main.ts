@@ -11,6 +11,14 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, 'room.proto'),
       package: 'room',
+<<<<<<< HEAD
+      url: '0.0.0.0:50053'
+    },
+  });
+
+  await app.listen();
+  console.log('🚀 Room Service (gRPC) rodando na porta 50053');
+=======
       url: '0.0.0.0:50052'
     },
   });
@@ -21,5 +29,6 @@ async function bootstrap() {
   await app.listen(3000);
   console.log('GraphQL Room Service rodando na porta 3000');
   
+>>>>>>> origin/junior-gomes
 }
 bootstrap();

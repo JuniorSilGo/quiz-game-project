@@ -21,9 +21,6 @@ export class MatchService implements OnModuleDestroy {
     @Inject('ROOM_SERVICE') private readonly roomClient: RoomServiceClient,
   ) {}
 
-  //
-  // START MATCH
-  //
   async startMatch(roomId: number, dto?: Partial<CreateMatchDto>) {
     const room = await this.roomClient.getRoom({ roomId });
 
@@ -53,9 +50,6 @@ export class MatchService implements OnModuleDestroy {
     return match;
   }
 
-  //
-  // EMIT NEXT QUESTION
-  //
   private async emitNextQuestion(matchId: number, roomId: number, roundIndex: number) {
     const question = await this.questionClient.fetchQuestion({ roomId, roundIndex });
 
@@ -78,42 +72,61 @@ export class MatchService implements OnModuleDestroy {
     this.gateway.emitNewQuestion(roomId, payload);
   }
 
-  //
-  // SUBMIT ANSWER
-  //
-  async submitAnswer(roomId: number, dto: CreatePlayerAnswerDto) {
-    const answer = await this.repo.createPlayerAnswer({
-      roundId: dto.roundId,
-      matchPlayerId: dto.matchPlayerId,
-      playerId: dto.playerId,
-      answerId: dto.answerId,
-      isCorrect: dto.isCorrect,
-      timeMs: dto.timeMs,
-      pointsAwarded: dto.pointsAwarded ?? 0,
-    });
+  async submitAnswer(roomId: number, dto: CreatePlayerAnswerDto & {
+    roundId: number;
+    matchPlayerId?: number;
+    playerId: number;
+    answerId: number;
+    timeMs?: number;
+    pointsAwarded?: number;
+    isCorrect?: boolean;
+  }) {
 
-    // 🔥 Buscar matchId via round
     const round = await this.repo.findRoundById(dto.roundId);
-
     if (!round) {
       this.logger.error(`Round ${dto.roundId} não encontrado ao submeter resposta.`);
-      throw new Error(`Round ${dto.roundId} não encontrado`);
+      return { success: false, message: `Round ${dto.roundId} não encontrado`, score: 0 };
+    }
+
+    let answer;
+    try {
+      answer = await this.repo.createPlayerAnswer({
+        roundId: dto.roundId,
+        matchPlayerId: dto.matchPlayerId,
+        playerId: dto.playerId,
+        answerId: dto.answerId,
+        isCorrect: dto.isCorrect,
+        timeMs: dto.timeMs,
+        pointsAwarded: dto.pointsAwarded ?? 0,
+      });
+    } catch (err) {
+      this.logger.error('Erro ao criar PlayerAnswer: ' + err?.message);
+      return { success: false, message: 'Erro ao salvar resposta', score: 0 };
     }
 
     const matchId = round.matchId;
 
+    let updatedPlayer;
+    try {
+      updatedPlayer = await this.repo.updateMatchPlayerScore(
+        matchId,
+        dto.playerId,
+        dto.pointsAwarded || 0
+      );
+    } catch (err) {
+      this.logger.error('Falha ao atualizar pontuação do jogador: ' + err?.message);
+      return { success: false, message: 'Falha ao atualizar pontuação', score: 0 };
+    }
 
-    // atualizar score
-    await this.repo.updateMatchPlayerScore(
-      matchId,
-      dto.playerId,
-      dto.pointsAwarded || 0
-    );
-
-    this.gateway.emitScoreUpdate(roomId, {
-      playerId: dto.playerId,
-      added: dto.pointsAwarded || 0,
-    });
+    try {
+      this.gateway.emitScoreUpdate(roomId, {
+        playerId: dto.playerId,
+        added: dto.pointsAwarded || 0,
+        score: updatedPlayer.score,
+      });
+    } catch (err) {
+      this.logger.warn('Falha ao emitir atualização de score: ' + err?.message);
+    }
 
     try {
       await this.rankingClient.updateScores({
@@ -124,34 +137,28 @@ export class MatchService implements OnModuleDestroy {
       this.logger.error('Ranking update failed: ' + err?.message);
     }
 
-    return { ok: true, answerId: answer.id };
+    return { success: true, message: 'Resposta registrada', score: updatedPlayer.score };
   }
 
-  //
-  // GET STATE
-  //
-  async getState(roomId: number) {
-    const match = await this.repo.findMatchByRoomId(roomId);
+  async getState(matchId: number) {
+    const match = await this.repo.findMatchById(matchId); 
     if (!match) return null;
 
     const players = await this.repo.findMatchPlayers(match.id);
 
     return {
       matchId: match.id,
-      roomId: match.roomId,
       status: match.status,
       currentRound: match.currentRound,
+      totalRounds: match.totalRounds,
       players: players.map(p => ({
-        id: p.playerId,
+        playerId: p.playerId,
         username: p.username,
         score: p.score,
       })),
     };
   }
 
-  //
-  // END MATCH
-  //
   async endMatch(matchId: number, roomId: number) {
     await this.repo.updateMatch(matchId, {
       status: 'FINISHED',

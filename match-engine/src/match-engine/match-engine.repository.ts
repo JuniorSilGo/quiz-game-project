@@ -9,7 +9,6 @@ export class MatchRepository {
     await this.prisma.$disconnect();
   }
 
-  // MATCH
   createMatch(data: any) {
     return this.prisma.match.create({ data });
   }
@@ -27,7 +26,6 @@ export class MatchRepository {
     });
   }
 
-  // PLAYERS
   upsertMatchPlayer(matchId: number, playerId: number, data: any) {
     return this.prisma.matchPlayer.upsert({
       where: { matchId_playerId: { matchId, playerId } },
@@ -49,7 +47,6 @@ export class MatchRepository {
     });
   }
 
-  // ROUNDS
   createRound(data: any) {
     return this.prisma.round.create({ data });
   }
@@ -60,8 +57,14 @@ export class MatchRepository {
     });
   }
 
-  // PLAYER ANSWERS
   createPlayerAnswer(data: any) {
     return this.prisma.playerAnswer.create({ data });
   }
+
+  findMatchById(matchId: number) {
+  return this.prisma.match.findUnique({
+    where: { id: matchId },
+  });
+}
+
 }

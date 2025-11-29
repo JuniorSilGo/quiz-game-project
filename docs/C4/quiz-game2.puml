@@ -1,0 +1,32 @@
+@startuml
+title C2 - Containers
+
+node "Frontend (Graphql)" as FE
+node "Kong API Gateway" as Kong
+node "GraphQL Server" as GQL
+database "PostgreSQL" as PG
+
+node "Auth Service (NestJS)" as Auth
+node "Room Service (NestJS)" as Room
+node "Question Service (NestJS)" as Question
+node "Match Engine (NestJS)" as Match
+node "Ranking Service (NestJS)" as Ranking
+node "Game Service (NestJS)" as Game
+
+FE --> GQL : GraphQL Query/Mutation
+GQL --> Kong : Roteamento
+Kong --> Auth : gRPC
+Kong --> Room : gRPC
+Kong --> Match : gRPC
+Kong --> Ranking : gRPC
+Kong --> Game : gRPC
+
+
+Question --> Match : gRPC perguntas
+
+Auth --> PG
+Room --> PG
+Ranking --> PG
+Game --> PG
+
+@enduml
