@@ -11,7 +11,6 @@ export class AuthGuard implements CanActivate {
   constructor(private readonly authClient: AuthClientService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Para HTTP
     if (context.getType() === 'http') {
       const req = context.switchToHttp().getRequest();
       const auth = req.headers['authorization'] || req.headers['Authorization'];
@@ -23,7 +22,6 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    // Para gRPC
     const data = context.switchToRpc().getData() as any;
     let token = data?.token;
 

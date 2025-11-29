@@ -3,7 +3,7 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 import { GenerateQuestionDto } from './dto/generate-question.dto';
 import { Question as QuestionInterface } from './interfaces/question.interface';
 import { Difficulty } from '@prisma/client';
-import prisma from '../db'; 
+import prisma from '../db';
 
 interface OpenAIChoice {
   message?: { content?: string };
@@ -99,7 +99,7 @@ Formato esperado:
         parsed.map(async (item) =>
           prisma.question.create({
             data: {
-              category: topic ?? 'Geral', 
+              category: topic ?? 'Geral',
               difficulty: this.mapDifficulty(item.difficulty ?? difficulty),
               questionText: item.question || 'Pergunta não gerada',
               options: item.options ?? { A: '', B: '', C: '', D: '' },
@@ -111,11 +111,9 @@ Formato esperado:
       );
 
       const questions: QuestionInterface[] = savedQuestionsPrisma.map((q) => ({
-        question: q.questionText,
-        options: q.options as { A: string; B: string; C: string; D: string },
+        statement: q.questionText,
+        alternatives: q.options as { [key: string]: string },
         correctAnswer: q.correctAnswer,
-        topic: q.category,
-        difficulty: q.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard',
       }));
 
       return { questions };
@@ -142,7 +140,6 @@ Formato esperado:
     }
   }
 
-  // 🔹 Extrai JSON limpo da resposta da IA
   private extractJsonArray(text: string): string | null {
     if (!text) return null;
 
