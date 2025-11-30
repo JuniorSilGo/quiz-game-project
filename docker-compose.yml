@@ -26,6 +26,15 @@ services:
     ports: [ "3000:3000", "50050:50050" ]
     networks: [ quiz-net ]
 
+  statistics:
+      build: ./statistics
+      container_name: statistics
+      env_file: ./statistics/.env
+      environment: [AUTH_SERVICE_ADDR=auth-service:50056, STATISTICS_BIND_ADDR=0.0.0.0:50052]
+      depends_on: [auth-service]
+      ports: ["3002:3002"]
+      networks: [ quiz-net ]
+
 #  match-engine:
 #    build: ./match-engine
 #    container_name: match-engine
