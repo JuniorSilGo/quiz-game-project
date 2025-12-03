@@ -4,7 +4,6 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
 async function bootstrap() {
-  // Cria microserviço gRPC (sem servidor HTTP)
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
@@ -23,5 +22,4 @@ async function bootstrap() {
     process.env.RANKING_GRPC_URL || '0.0.0.0:50052',
   );
 }
-
 bootstrap();

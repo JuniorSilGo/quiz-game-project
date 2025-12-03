@@ -2,11 +2,9 @@ syntax = "proto3";
 
 package question;
 
-
 service QuestionService {
   rpc GenerateQuestions (GenerateQuestionRequest) returns (GenerateQuestionResponse);
 }
-
 
 message GenerateQuestionRequest {
   string topic = 1;
@@ -14,15 +12,11 @@ message GenerateQuestionRequest {
   int32 quantity = 3;
 }
 
-
 message Question {
-  string question = 1;
-  map<string, string> options = 2;
+  string statement = 1;
+  map<string, string> alternatives = 2;
   string correctAnswer = 3;
-  string topic = 4;
-  string difficulty = 5;
 }
-
 
 message GenerateQuestionResponse {
   repeated Question questions = 1;

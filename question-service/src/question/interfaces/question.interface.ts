@@ -1,7 +1,5 @@
 export interface Question {
-  question: string;
-  options: { A: string; B: string; C: string; D: string };
+  statement: string;
+  alternatives: { [key: string]: string };
   correctAnswer: string;
-  topic: string;
-  difficulty: string;
 }

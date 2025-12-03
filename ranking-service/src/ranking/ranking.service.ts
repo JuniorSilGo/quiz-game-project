@@ -6,17 +6,14 @@ export class RankingService {
   private readonly prisma = new PrismaClient();
   private readonly logger = new Logger(RankingService.name);
 
-  // 🟢 Atualiza ou cria ranking baseado no userId
   async updateScore(payload: { userId: string; points: number; username?: string }) {
     const { userId, points, username } = payload;
 
     if (!userId) throw new NotFoundException('userId é obrigatório');
 
-    // Procura o jogador pelo userId
     let ranking = await this.prisma.ranking.findUnique({ where: { userId } });
 
     if (ranking) {
-      // Atualiza score e level
       ranking = await this.prisma.ranking.update({
         where: { userId },
         data: {
@@ -26,7 +23,6 @@ export class RankingService {
         },
       });
     } else {
-      // Cria novo jogador no ranking
       ranking = await this.prisma.ranking.create({
         data: {
           userId,
