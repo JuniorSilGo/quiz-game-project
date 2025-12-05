@@ -1,13 +1,13 @@
 import {Controller} from '@nestjs/common';
 import {GrpcMethod} from '@nestjs/microservices';
-import {CreateMatchUseCase} from '../../../application/match/use-cases/create-match.use-case';
-import {AnswerQuestionUseCase} from '../../../application/match/use-cases/answer-question.use-case';
-import {GetMatchStatusUseCase} from '../../../application/match/use-cases/get-match-status.use-case';
-import {GetMatchRankingUseCase} from '../../../application/match/use-cases/get-match-ranking.use-case';
-import * as createMatchDto from '../../../application/match/dto/create-match.dto';
-import * as answerDto from '../../../application/match/dto/answer.dto';
-import * as getStatusDto from '../../../application/match/dto/get-status.dto';
-import * as getRankingDto from '../../../application/match/dto/get-ranking.dto';
+import {CreateMatchUseCase} from '../../../application/use-cases/create-match.use-case';
+import {AnswerQuestionUseCase} from '../../../application/use-cases/answer-question.use-case';
+import {GetMatchStatusUseCase} from '../../../application/use-cases/get-match-status.use-case';
+import {GetMatchRankingUseCase} from '../../../application/use-cases/get-match-ranking.use-case';
+import * as createMatchDto from '../../../application/dto/create-match.dto';
+import * as answerDto from '../../../application/dto/answer.dto';
+import * as getStatusDto from '../../../application/dto/get-status.dto';
+import * as getRankingDto from '../../../application/dto/get-ranking.dto';
 
 @Controller()
 export class MatchGrpcController {

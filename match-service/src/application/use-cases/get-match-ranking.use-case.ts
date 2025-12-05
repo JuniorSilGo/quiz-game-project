@@ -1,5 +1,5 @@
 import {Injectable} from '@nestjs/common';
-import {MatchDomainService} from '../../../domain/match/services/match-domain.service';
+import {MatchDomainService} from '../../domain/services/match-domain.service';
 import {GetRankingDto, MatchRankingOutputDto} from '../dto/get-ranking.dto';
 
 @Injectable()

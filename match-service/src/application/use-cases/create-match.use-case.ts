@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MatchDomainService } from '../../../domain/match/services/match-domain.service';
+import { MatchDomainService } from '../../domain/services/match-domain.service';
 import { CreateMatchDto, CreatedMatchOutputDto } from '../dto/create-match.dto';
 
 @Injectable()
