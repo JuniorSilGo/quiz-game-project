@@ -1,6 +1,6 @@
 import { Injectable, Logger, Inject, OnModuleInit } from '@nestjs/common';
-import { StatisticsRepository } from './statistics.repository';
-import { UserStatsResponseDto, RankingResponseDto } from './dto/statistics.dto';
+import { StatisticsRepository } from '../repositories/statistics.repository';
+import { UserStatsResponseDto, RankingResponseDto } from '../../application/dto/statistics.dto';
 import type { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 

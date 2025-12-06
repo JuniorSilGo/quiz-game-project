@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { StatisticsController } from './statistics.controller';
-import { StatisticsService } from './statistics.service';
-import { StatisticsRepository } from './statistics.repository';
+import { StatisticsController } from '../grpc/controllers/statistics.controller';
+import { StatisticsService } from '../../domain/services/statistics.service';
+import { StatisticsRepository } from '../../domain/repositories/statistics.repository';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
@@ -13,7 +13,7 @@ import { join } from 'path';
         transport: Transport.GRPC,
         options: {
           package: 'auth',
-          protoPath: join(__dirname, '../../../protos/auth.proto'),
+          protoPath: join(__dirname, '../../../../protos/auth.proto'),
           url: '0.0.0.0:50056',
         },
       },

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { StatisticsModule } from './statistics/statistics.module';
+import { StatisticsModule } from './infrastructure/modules/statistics.module';
 
 @Module({
   imports: [StatisticsModule],

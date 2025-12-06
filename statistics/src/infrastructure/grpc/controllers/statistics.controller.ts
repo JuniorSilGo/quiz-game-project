@@ -1,7 +1,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { StatisticsService } from './statistics.service';
-import { GetUserStatusRequestDto } from './dto/statistics.dto';
+import { StatisticsService } from '../../../domain/services/statistics.service';
+import { GetUserStatusRequestDto } from '../../../application/dto/statistics.dto';
 
 @Controller()
 export class StatisticsController {
