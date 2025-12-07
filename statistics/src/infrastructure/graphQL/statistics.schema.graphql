@@ -1,0 +1,15 @@
+type UserStats {
+  userId: Int!
+  score: Int!
+  wins: Int!
+  matches: Int!
+}
+
+type Ranking {
+  users: [UserStats!]!
+}
+
+type Query {
+  userStats(userId: Int!): UserStats!
+  ranking: Ranking!
+}
