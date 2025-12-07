@@ -1,37 +1,19 @@
-import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
+import { Transport } from '@nestjs/microservices';
+import { join } from 'path';
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
-import { Transport, GrpcOptions } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const logger = new Logger('Statistics-Main');
-
-  const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn', 'debug'],
-  });
-
-  app.enableCors();
-
-  const grpcServerOptions: GrpcOptions = {
+  const app = await NestFactory.createMicroservice(AppModule, {
     transport: Transport.GRPC,
     options: {
       package: 'statistics',
-      protoPath: join(__dirname.includes('dist') ? process.cwd() + '/src' : process.cwd(),'infrastructure/grpc/proto/statistics.proto'),
-      url: '0.0.0.0:50050', 
+      protoPath: join(process.cwd(), 'src/infrastructure/grpc/proto/statistics.proto'),
+      url: '0.0.0.0:50050',
     },
-  };
+  });
 
-  app.connectMicroservice(grpcServerOptions);
-
-  await app.startAllMicroservices();
-  logger.log(`gRPC Statistics Service is running at: ${grpcServerOptions.options.url}`);
-
-  await app.listen(3000);
-  logger.log('HTTP Statistics server running on port 3000');
+  await app.listen();
+  console.log('✅ statistics-service gRPC running on 50050');
 }
-
-bootstrap().catch((err) => {
-  console.error('Erro ao iniciar microserviço Statistics:', err);
-  process.exit(1);
-});
+bootstrap();

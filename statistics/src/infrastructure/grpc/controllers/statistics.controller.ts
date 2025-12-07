@@ -1,37 +1,24 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { StatisticsService } from '../../../domain/services/statistics.service';
-import { GetUserStatusRequestDto } from '../../../application/dto/statistics.dto';
+import { GetUserStatsUseCase } from '../../../application/use-cases/get-user-stats.usecase';
+import { GetRankingUseCase } from '../../../application/use-cases/get-ranking.usecase';
 
 @Controller()
-export class StatisticsController {
-  private readonly logger = new Logger(StatisticsController.name);
-
-  constructor(private readonly service: StatisticsService) {}
+export class StatisticsGrpcController {
+  constructor(
+    private readonly getUserStats: GetUserStatsUseCase,
+    private readonly getRanking: GetRankingUseCase,
+  ) {}
 
   @GrpcMethod('StatisticsService', 'GetUserStats')
-  async GetUserStats(data: { userId: number }, metadata: any): Promise<any> {
-    this.logger.debug(`gRPC GetUserStats chamada para userId=${data.userId}`);
-    const dto = await this.service.getUserStats(data.userId);
-    return {
-      userId: dto.userId,
-      score: dto.score,
-      wins: dto.wins,
-      matches: dto.matches,
-    };
+  async getUser(data: { userId: number }) {
+    const dto = await this.getUserStats.execute(data.userId);
+    return dto;
   }
 
   @GrpcMethod('StatisticsService', 'GetRanking')
-  async GetRanking(_: any, metadata: any): Promise<any> {
-    this.logger.debug('gRPC GetRanking chamada');
-    const ranking = await this.service.getRanking();
-    return {
-      users: ranking.users.map((u) => ({
-        userId: u.userId,
-        score: u.score,
-        wins: u.wins,
-        matches: u.matches,
-      })),
-    };
+  async getRankingGrpc() {
+    const result = await this.getRanking.execute();
+    return result;
   }
 }

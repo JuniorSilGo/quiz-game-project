@@ -1,14 +1,13 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { IStatisticsRepository } from './statistics.repository.interface';
 
 @Injectable()
-export class StatisticsRepository implements OnModuleDestroy {
+export class StatisticsRepository implements IStatisticsRepository {
   private prisma = new PrismaClient();
 
   async findByUserId(userId: number) {
-    return this.prisma.userStats.findUnique({
-      where: { userId },
-    });
+    return this.prisma.userStats.findUnique({ where: { userId } });
   }
 
   async findAllOrderedByScore(limit?: number) {
@@ -18,8 +17,8 @@ export class StatisticsRepository implements OnModuleDestroy {
     });
   }
 
-  async upsertUserStats(userId: number, data: Partial<{ score: bigint | number; wins: bigint | number; matches: bigint | number }>) {
-    const createData: any = {
+  async upsertUserStats(userId: number, data: any) {
+    const createData = {
       userId,
       score: BigInt(data.score ?? 0),
       wins: BigInt(data.wins ?? 0),
@@ -27,9 +26,9 @@ export class StatisticsRepository implements OnModuleDestroy {
     };
 
     const updateData: any = {};
-    if (data.score !== undefined) updateData.score = BigInt(data.score as any);
-    if (data.wins !== undefined) updateData.wins = BigInt(data.wins as any);
-    if (data.matches !== undefined) updateData.matches = BigInt(data.matches as any);
+    if (data.score !== undefined) updateData.score = BigInt(data.score);
+    if (data.wins !== undefined) updateData.wins = BigInt(data.wins);
+    if (data.matches !== undefined) updateData.matches = BigInt(data.matches);
 
     return this.prisma.userStats.upsert({
       where: { userId },
@@ -42,3 +41,4 @@ export class StatisticsRepository implements OnModuleDestroy {
     await this.prisma.$disconnect();
   }
 }
+
