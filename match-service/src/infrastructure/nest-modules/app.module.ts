@@ -1,28 +1,30 @@
 import {Module} from '@nestjs/common';
-import {MatchGrpcController} from '../grpc/controllers/match.grpc.controller';
-import {MatchDomainService} from '../../domain/services/match-domain.service';
-import {MATCH_REPOSITORY} from '../../domain/repositories/match.repository.port';
-import {InMemoryMatchRepository} from '../persistence/in-memory/match.repository.in-memory.adapter';
+import {ScheduleModule} from '@nestjs/schedule';
 import {CreateMatchUseCase} from '../../application/use-cases/create-match.use-case';
 import {AnswerQuestionUseCase} from '../../application/use-cases/answer-question.use-case';
 import {GetMatchStatusUseCase} from '../../application/use-cases/get-match-status.use-case';
 import {GetMatchRankingUseCase} from '../../application/use-cases/get-match-ranking.use-case';
-import {MatchTimerService} from "../../domain/services/match-timer.service";
+import {AdvanceExpiredRoundsUseCase} from '../../application/use-cases/advance-expired-rounds.use-case';
+import {MatchGrpcController} from '../grpc/controllers/match.grpc.controller';
+import {MATCH_PORT} from '../../domain/repositories/match.repository.port';
+import {InMemoryMatchRepository} from '../persistence/in-memory/match.repository.in-memory.adapter';
+import {MatchTimerService} from '../services/match-timer.service';
 
 @Module({
+  imports: [ScheduleModule.forRoot()],
   controllers: [MatchGrpcController],
   providers: [
-    MatchDomainService,
-    MatchTimerService,
     {
-      provide: MATCH_REPOSITORY,
+      provide: MATCH_PORT,
       useClass: InMemoryMatchRepository,
     },
+    MatchTimerService,
+    AdvanceExpiredRoundsUseCase,
     CreateMatchUseCase,
     AnswerQuestionUseCase,
     GetMatchStatusUseCase,
     GetMatchRankingUseCase,
   ],
 })
-export class MatchModule {
+export class AppModule {
 }

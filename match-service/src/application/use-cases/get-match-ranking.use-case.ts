@@ -1,14 +1,23 @@
-import {Injectable} from '@nestjs/common';
-import {MatchDomainService} from '../../domain/services/match-domain.service';
+import {Inject, Injectable} from '@nestjs/common';
 import {GetRankingDto, MatchRankingOutputDto} from '../dto/get-ranking.dto';
+import {MATCH_PORT, type MatchRepositoryPort} from '../../domain/repositories/match.repository.port';
+import {getMatchOrThrow} from './helpers/match.helpers';
 
 @Injectable()
 export class GetMatchRankingUseCase {
-  constructor(private readonly domain: MatchDomainService) {
+  constructor(
+    @Inject(MATCH_PORT)
+    private readonly repository: MatchRepositoryPort,
+  ) {
   }
 
-  execute(input: GetRankingDto): MatchRankingOutputDto {
-    const rankings = this.domain.getRanking(input.roomName);
+  async execute(input: GetRankingDto): Promise<MatchRankingOutputDto> {
+    const match = await getMatchOrThrow(this.repository, input.roomName);
+
+    const rankings = Array.from(match.scores.entries())
+    .map(([userId, score]) => ({userId, score}))
+    .sort((a, b) => b.score - a.score);
+
     return {userRankings: rankings};
   }
 }

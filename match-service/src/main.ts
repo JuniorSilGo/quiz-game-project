@@ -1,5 +1,5 @@
 import {NestFactory} from '@nestjs/core';
-import {AppModule} from './app.module';
+import {AppModule} from './infrastructure/nest-modules/app.module';
 import {grpcServerOptions} from './config/grpc.config';
 
 async function bootstrap() {

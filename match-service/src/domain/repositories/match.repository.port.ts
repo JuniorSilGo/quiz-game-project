@@ -1,6 +1,6 @@
 import { Match } from '../entities/match.entity';
 
-export const MATCH_REPOSITORY = 'MATCH_REPOSITORY';
+export const MATCH_PORT = 'MATCH_PORT';
 
 export interface MatchRepositoryPort {
   save(match: Match): Promise<void> | void;
