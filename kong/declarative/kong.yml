@@ -1,0 +1,42 @@
+_format_version: "3.0"
+_transform: true
+
+################################
+# SERVICES & ROUTES
+################################
+services:
+  # Serviço de autenticação (login/registro) - NÃO protegido por JWT
+  - name: auth-service
+    url: http://auth-service:3001
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: false
+
+################################
+# CONSUMERS & JWT CREDENTIALS
+################################
+consumers:
+  # Representa o emissor de tokens aceitos (seu micro-serviço de auth)
+  - username: auth-service-consumer
+    custom_id: auth-service
+    jwt_secrets:
+      - algorithm: HS256
+        key: auth-service          # vai bater com o "iss" do JWT
+        secret: MEU_SUPER_SECRET   # mesmo valor do JWT_SECRET do auth-service
+
+################################
+# PLUGINS
+################################
+plugins:
+  # Plugin JWT protegendo o quiz-service (serviço de exemplo)
+  - name: jwt
+    service: quiz-service
+    config:
+      key_claim_name: iss          # claim no token que deve bater com 'key' (auth-service)
+      claims_to_verify:
+        - exp                      # verifica expiração
+      secret_is_base64: false
+      uri_param_names:
+        - jwt                      # opcional: permite ?jwt=token além do header Authorization

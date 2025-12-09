@@ -1,4 +1,4 @@
-import { GeneratedQuestion } from '../../domain/entities/generated-question.vo';
+import { GeneratedQuestion } from 'src/domain/entities/generated-question.vo';
 
 export interface CreateMatchDto {
   roomName: string;

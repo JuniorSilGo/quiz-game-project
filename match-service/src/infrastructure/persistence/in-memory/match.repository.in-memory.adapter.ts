@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
-import {Match} from '../../../domain/entities/match.entity';
-import {MatchRepositoryPort} from '../../../domain/repositories/match.repository.port';
+import {Match} from 'src/domain/entities/match.entity';
+import {MatchRepositoryPort} from 'src/domain/repositories/match.repository.port';
 
 @Injectable()
 export class InMemoryMatchRepository implements MatchRepositoryPort {

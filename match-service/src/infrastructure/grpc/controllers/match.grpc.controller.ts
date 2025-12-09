@@ -1,13 +1,13 @@
 import {Controller} from '@nestjs/common';
 import {GrpcMethod} from '@nestjs/microservices';
-import {CreateMatchUseCase} from '../../../application/use-cases/create-match.use-case';
-import {AnswerQuestionUseCase} from '../../../application/use-cases/answer-question.use-case';
-import {GetMatchStatusUseCase} from '../../../application/use-cases/get-match-status.use-case';
-import {GetMatchRankingUseCase} from '../../../application/use-cases/get-match-ranking.use-case';
-import * as createMatchDto from '../../../application/dto/create-match.dto';
-import * as answerDto from '../../../application/dto/answer.dto';
-import * as getStatusDto from '../../../application/dto/get-status.dto';
-import * as getRankingDto from '../../../application/dto/get-ranking.dto';
+import type { AnswerDto } from 'src/application/dto/answer.dto';
+import type { CreateMatchDto } from 'src/application/dto/create-match.dto';
+import type { GetRankingDto } from 'src/application/dto/get-ranking.dto';
+import type { GetStatusDto } from 'src/application/dto/get-status.dto';
+import { AnswerQuestionUseCase } from 'src/application/use-cases/answer-question.use-case';
+import { CreateMatchUseCase } from 'src/application/use-cases/create-match.use-case';
+import { GetMatchRankingUseCase } from 'src/application/use-cases/get-match-ranking.use-case';
+import { GetMatchStatusUseCase } from 'src/application/use-cases/get-match-status.use-case';
 
 @Controller()
 export class MatchGrpcController {
@@ -20,22 +20,22 @@ export class MatchGrpcController {
   }
 
   @GrpcMethod('MatchService', 'CreateMatch')
-  createMatch(payload: createMatchDto.CreateMatchDto) {
+  createMatch(payload: CreateMatchDto) {
     return this.createMatchUseCase.execute(payload);
   }
 
   @GrpcMethod('MatchService', 'Answer')
-  answer(payload: answerDto.AnswerDto) {
+  answer(payload: AnswerDto) {
     return this.answerQuestionUseCase.execute(payload);
   }
 
   @GrpcMethod('MatchService', 'GetMatchStatus')
-  getMatchStatus(payload: getStatusDto.GetStatusDto) {
+  getMatchStatus(payload: GetStatusDto) {
     return this.getMatchStatusUseCase.execute(payload);
   }
 
   @GrpcMethod('MatchService', 'GetMatchRanking')
-  getMatchRanking(payload: getRankingDto.GetRankingDto) {
+  getMatchRanking(payload: GetRankingDto) {
     return this.getMatchRankingUseCase.execute(payload);
   }
 }

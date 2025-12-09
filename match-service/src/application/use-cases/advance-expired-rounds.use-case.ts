@@ -1,5 +1,5 @@
 import {Inject, Injectable} from '@nestjs/common';
-import {MATCH_PORT, type MatchRepositoryPort} from '../../domain/repositories/match.repository.port';
+import {MATCH_PORT, type MatchRepositoryPort} from 'src/domain/repositories/match.repository.port';
 import {advanceRound} from './helpers/match.helpers';
 
 @Injectable()

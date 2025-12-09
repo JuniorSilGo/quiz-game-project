@@ -1,6 +1,6 @@
 import {BadRequestException, Inject, Injectable} from '@nestjs/common';
-import {AnswerDto, AnswerOutputDto} from '../dto/answer.dto';
-import {MATCH_PORT, type MatchRepositoryPort} from '../../domain/repositories/match.repository.port';
+import {AnswerDto, AnswerOutputDto} from 'src/application/dto/answer.dto';
+import {MATCH_PORT, type MatchRepositoryPort} from 'src/domain/repositories/match.repository.port';
 import {
   advanceRound,
   getMatchOrThrow,

@@ -1,6 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {Interval} from '@nestjs/schedule';
-import {AdvanceExpiredRoundsUseCase} from '../../application/use-cases/advance-expired-rounds.use-case';
+import {AdvanceExpiredRoundsUseCase} from 'src/application/use-cases/advance-expired-rounds.use-case';
 
 const CHECK_INTERVAL_MS = 300;
 

@@ -1,6 +1,6 @@
 import {NotFoundException} from '@nestjs/common';
-import {Match} from '../../../domain/entities/match.entity';
-import type {MatchRepositoryPort} from '../../../domain/repositories/match.repository.port';
+import {Match} from 'src/domain/entities/match.entity';
+import type {MatchRepositoryPort} from 'src/domain/repositories/match.repository.port';
 
 export const ROUND_DURATION_MS = 30000;
 export const MIN_POINTS = 100;

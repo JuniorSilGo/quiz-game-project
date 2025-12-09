@@ -1,8 +1,9 @@
 import {BadRequestException, Inject, Injectable} from '@nestjs/common';
-import {CreateMatchDto, CreatedMatchOutputDto} from '../dto/create-match.dto';
-import {Match} from '../../domain/entities/match.entity';
-import {MATCH_PORT, type MatchRepositoryPort} from '../../domain/repositories/match.repository.port';
+import {CreateMatchDto, CreatedMatchOutputDto} from 'src/application/dto/create-match.dto';
+import {Match} from 'src/domain/entities/match.entity';
+import {MATCH_PORT, type MatchRepositoryPort} from 'src/domain/repositories/match.repository.port';
 import {ROUND_DURATION_MS} from './helpers/match.helpers';
+import {toCreatedMatchOutputDTO} from 'src/application/mappers/match.mapper';
 
 @Injectable()
 export class CreateMatchUseCase {
@@ -33,13 +34,6 @@ export class CreateMatchUseCase {
 
     await Promise.resolve(this.repository.save(match));
 
-    return {
-      roomName: match.roomName,
-      currentRound: match.currentRound,
-      totalRounds: match.questions.length,
-      userPlayersIds: match.userPlayersIds,
-      difficulty: match.difficulty,
-      topic: match.topic,
-    };
+    return toCreatedMatchOutputDTO(match);
   }
 }

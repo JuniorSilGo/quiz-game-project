@@ -5,10 +5,8 @@ COPY package*.json ./
 RUN npm ci
 
 COPY tsconfig*.json nest-cli.json ./
-COPY prisma ./prisma
 COPY src ./src
 
-RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -21,6 +19,6 @@ COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
 
-EXPOSE 3001 50051
+EXPOSE 50051
 
 CMD ["node", "dist/main"]
