@@ -34,6 +34,14 @@ services:
       depends_on: [auth-service]
       ports: ["3002:3002"]
       networks: [ quiz-net ]
+      
+  question-service:
+    build: ./question-service
+    container_name: question_service
+    env_file: ./question-service/.env
+    depends_on: [ postgres, gateway ]
+    ports: [ "3003:3003", "50054:50054" ]
+    networks: [ quiz-net ]
 
 #  match-engine:
 #    build: ./match-engine
