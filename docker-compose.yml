@@ -1,6 +1,48 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: quiz_postgres
+    environment:
+      POSTGRES_USER: quiz_user
+      POSTGRES_PASSWORD: quiz_password
+      POSTGRES_DB: quiz_db
+    ports: [ "5432:5432" ]
+    volumes: [ pgdata:/var/lib/postgresql/data ]
+    networks: [ quiz-net ]
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth_service
+    env_file: ./auth-service/.env
+    depends_on: [ postgres ]
+    ports: [ "3001:3001", "50051:50051" ]
+    networks: [ quiz-net ]
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    env_file: ./gateway/.env
+    depends_on: [ auth-service ]
+    ports: [ "3000:3000", "50050:50050" ]
+    networks: [ quiz-net ]
+
+  question-service:
+    build: ./question-service
+    container_name: question_service
+    env_file: ./question-service/.env
+    depends_on: [ postgres, gateway ]
+    ports: [ "3003:3003", "50054:50054" ]
+    networks: [ quiz-net ]
+
+#  match-engine:
+#    build: ./match-engine
+#    container_name: match-engine
+#    depends_on: [ gateway ]
+#    ports: [ "3002:3002", "50052:50052" ]
+#    networks: [ quiz-net ]
+
   kong:
     image: kong:3.8
     container_name: kong
