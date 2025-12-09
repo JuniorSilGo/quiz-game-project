@@ -6,6 +6,8 @@ import {
   QuestionGenerationGateway,
 } from '../../domain/gateways/question-generation.gateway';
 import { Question as QuestionInterface } from '../../domain/interfaces/question.interface';
+import { ResponseSanitizerHandler } from './sanitizers/response-sanitizer.handler';
+import { SanitizerPipelineFactory } from './sanitizers/sanitizer-pipeline.factory';
 
 interface OpenAIChoice {
   message?: { content?: string };
@@ -27,6 +29,11 @@ interface ParsedQuestion {
 export class OpenRouterClient implements QuestionGenerationGateway {
   private readonly openRouterUrl =
     'https://openrouter.ai/api/v1/chat/completions';
+  private readonly sanitizerPipeline: ResponseSanitizerHandler;
+
+  constructor() {
+    this.sanitizerPipeline = SanitizerPipelineFactory.create();
+  }
 
   async generateQuestions({
     prompt,
@@ -62,7 +69,7 @@ export class OpenRouterClient implements QuestionGenerationGateway {
       resp.data?.choices?.[0]?.text ??
       '';
 
-    const formatted = this.extractJsonArray(content);
+    const formatted = this.sanitizerPipeline.sanitize(content);
     if (!formatted) {
       return { raw: content, questions: null };
     }
@@ -82,57 +89,6 @@ export class OpenRouterClient implements QuestionGenerationGateway {
         alternatives: item.options ?? {},
         correctAnswer: item.correctAnswer,
       }));
-    } catch {
-      return null;
-    }
-  }
-
-  private extractJsonArray(text: string): string | null {
-    if (!text) return null;
-
-    const cleaned = this.stripModelArtifacts(text);
-    if (!cleaned) return null;
-
-    const directParse = this.tryParseJson(cleaned);
-    if (directParse) return directParse;
-
-    const start = cleaned.indexOf('[');
-    const end = cleaned.lastIndexOf(']');
-    if (start === -1 || end === -1 || end <= start) return null;
-
-    const jsonText = cleaned.slice(start, end + 1);
-    return this.tryParseJson(jsonText);
-  }
-
-  private stripModelArtifacts(text: string): string {
-    return text
-      .replace(/```json/gi, '')
-      .replace(/```/g, '')
-      .replace(/\[\/?B_INST\]/gi, '')
-      .replace(/\[\/?B_INS\]/gi, '')
-      .replace(/\[\/?INST\]/gi, '')
-      .replace(/\[\/?BOT\]/gi, '')
-      .replace(/\[\/?ASSISTANT\]/gi, '')
-      .replace(/\[\/?ASSIST\]/gi, '')
-      .replace(/\[\/?s\]/gi, '')
-      .replace(/<\/?s>/gi, '')
-      .replace(/<\/?BOS>/gi, '')
-      .replace(/<\/?EOS>/gi, '')
-      .replace(/\[\/?SYSTEM\]/gi, '')
-      .replace(/\[\/?USER\]/gi, '')
-      .trim();
-  }
-
-  private tryParseJson(payload: string): string | null {
-    try {
-      const parsed = JSON.parse(payload);
-      if (Array.isArray(parsed)) {
-        return JSON.stringify(parsed);
-      }
-      if (parsed && typeof parsed === 'object') {
-        return JSON.stringify([parsed]);
-      }
-      return null;
     } catch {
       return null;
     }
