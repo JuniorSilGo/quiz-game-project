@@ -8,31 +8,35 @@ datasource db {
 }
 
 model Room {
-  id        BigInt   @id @default(autoincrement())
-  name      String
-  ownerId   BigInt
-  status    RoomStatus @default(PENDING)
-  matchQtd  Int       @default(0)
-  players   RoomPlayer[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           Int          @id @default(autoincrement())
+  name         String       @unique
+  topic        String
+  difficulty   String
+  rounds       Int
+  createdById  Int
+  status       RoomStatus   @default(WAITING)
+  matchId      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  currentRound Int          @default(0)
+  totalRounds  Int          @default(0)
+  players      RoomPlayer[]
 }
 
 model RoomPlayer {
-  id      BigInt @id @default(autoincrement())
-  roomId  BigInt
-  userId  BigInt
+  id       Int      @id @default(autoincrement())
+  roomId   Int
+  userId   Int
   joinedAt DateTime @default(now())
+  room     Room     @relation(fields: [roomId], references: [id])
 
-  room Room @relation(fields: [roomId], references: [id])
-
-  @@unique([roomId, userId])   // evita duplicados (mesma sala e mesmo jogador)
+  @@unique([roomId, userId])
   @@index([userId])
 }
 
 enum RoomStatus {
-  PENDING
-  ACTIVE
+  WAITING
+  READY
+  STARTED
   FINISHED
-  CANCELLED
 }

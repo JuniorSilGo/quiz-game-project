@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Room" ADD COLUMN     "currentRound" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "totalRounds" INTEGER NOT NULL DEFAULT 0;
