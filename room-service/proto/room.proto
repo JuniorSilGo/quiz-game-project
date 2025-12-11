@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package room;
+
+service RoomService {
+  rpc CreateRoom (CreateRoomRequest) returns (RoomStatusResponse);
+  rpc JoinRoom (UserRoomRequest) returns (RoomStatusResponse);
+  rpc StartMatch (StartMatchRequest) returns (MatchStatusResponse);
+}
+
+message CreateRoomRequest {
+  string roomName = 1;
+  int32 userId = 2;
+  string topic = 3;
+  string difficulty = 4;
+  int32 rounds = 5;
+  repeated int32 userPlayersIds = 6;
+}
+
+message UserRoomRequest {
+  string roomName = 1;
+  int32 userId = 2;
+}
+
+message RoomStatusResponse {
+  int32 id = 1;
+  string name = 2;
+  string status = 3;
+  int32 userOwnerId = 4;
+  repeated int32 userPlayersId = 5;
+  int32 matchQtd = 6;
+  string topic = 7;
+  string difficulty = 8;
+  int32 rounds = 9;
+  string matchId = 10;
+}
+
+message StartMatchRequest {
+  int32 userId = 1;
+  string roomName = 2;
+  string topic = 3;
+  string difficulty = 4;
+}
+
+message MatchStatusResponse {
+  int32 currentRound = 1;
+  repeated int32 userPlayersId = 2;
+  string topic = 3;
+  string difficulty = 4;
+}
