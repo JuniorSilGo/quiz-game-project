@@ -1,17 +1,8 @@
-export interface GenerateQuestionsInput {
-  topic: string;
-  difficulty: string;
-  quantity: number;
-}
-
-export interface GeneratedQuestion {
-  statement: string;
-  alternatives: Record<string, string>;
-  correctAnswer: string;
-}
+import { GenerateQuestionsInput } from '../../application/dto/generate-questions.input';
+import { GenerateQuestionsOutput } from '../../application/dto/generate-questions.output';
 
 export interface QuestionsPort {
   generateQuestions(
     input: GenerateQuestionsInput,
-  ): Promise<GeneratedQuestion[]>;
+  ): Promise<GenerateQuestionsOutput>;
 }

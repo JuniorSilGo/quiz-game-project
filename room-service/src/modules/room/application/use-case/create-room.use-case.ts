@@ -1,85 +1,66 @@
-import { Inject, Injectable } from '@nestjs/common';
 import { RoomFactory } from '../../domain/services/room.factory';
-import * as roomRepositoryInterface from '../../domain/repositories/room.repository.interface';
-import * as questionsPort from '../../domain/repositories/questions.port';
-import * as matchPort from '../../domain/repositories/match.port';
+import type { RoomRepository } from '../../domain/repositories/room.repository.interface';
+import { CreateRoomInput } from '../dto/create-room.input';
+import { RoomEntity } from '../../domain/entities/room.entity';
+import { Inject } from '@nestjs/common';
+import type { QuestionsPort } from '../../domain/repositories/questions.port';
 
-export interface CreateRoomInput {
-  roomName: string;
-  userId: number;
-  topic: string;
-  difficulty: string;
-  rounds: number;
-  userPlayersIds?: number[];
-}
+// import * as questionsPort from '../../domain/repositories/questions.port';
+// import * as matchPort from '../../domain/repositories/match.port';
 
-export interface CreateRoomOutput {
-  id: number;
-  name: string;
-  topic: string;
-  difficulty: string;
-  rounds: number;
-  players: number[];
-  matchId: string | null;
-}
-
-@Injectable()
 export class CreateRoomUseCase {
   constructor(
     @Inject('RoomRepository')
-    private readonly roomRepo: roomRepositoryInterface.RoomRepository,
+    private readonly roomRepository: RoomRepository,
 
     @Inject('QuestionsPort')
-    private readonly questions: questionsPort.QuestionsPort,
+    private readonly questions: QuestionsPort,
 
-    @Inject('MatchPort')
-    private readonly match: matchPort.MatchPort,
+    // private readonly match: matchPort.MatchPort,
   ) {}
 
-  async execute(input: CreateRoomInput): Promise<CreateRoomOutput> {
-    // 1 — Criar entidade validada pela Factory
-    const room = RoomFactory.createRoom({
-      name: input.roomName,
+  // fluxo:
+  // Criar a sala/ salvar no banco ->
+  // Requisição das perguntas/ salvar no banco ->
+  // Requisição para criar uma partida passando as informações necessárias ->
+  // Atualizar os status da sala
+
+  async execute(input: CreateRoomInput): Promise<RoomEntity> {
+    const room = RoomFactory.create({
+      name: input.name,
       topic: input.topic,
       difficulty: input.difficulty,
       rounds: input.rounds,
-      createdById: input.userId,
-      players: input.userPlayersIds,
+      createdById: input.createdById,
+      players: input.players,
     });
 
-    // 2 — Persistir no banco
-    const createdRoom = await this.roomRepo.createRoom(room);
+    const createdRoom = await this.roomRepository.create(room);
 
-    // 3 — Gerar perguntas via question-service
+    // // 3 — Gerar perguntas via question-service
     const generatedQuestions = await this.questions.generateQuestions({
       topic: room.topic,
       difficulty: room.difficulty,
       quantity: room.rounds,
     });
 
-    // 4 — Criar o match via match-service
-    const matchResult = await this.match.createMatch({
-      userId: room.createdById,
-      questions: generatedQuestions,
-      userPlayersIds: room.players,
-      topic: room.topic,
-      difficulty: room.difficulty,
-    });
+    console.log('QUESTIONS RAW RESPONSE:', generatedQuestions);
 
-    // 5 — Se matchId existir, salvar na sala
-    if (matchResult.matchId) {
-      await this.roomRepo.attachMatch(createdRoom.id, matchResult.matchId);
-    }
+    // // 4 — Criar o match via match-service
+    // const matchResult = await this.match.createMatch({
+    //   userId: room.createdById,
+    //   questions: generatedQuestions,
+    //   userPlayersIds: room.players,
+    //   topic: room.topic,
+    //   difficulty: room.difficulty,
+    // });
 
-    // 6 — Retorno final
-    return {
-      id: createdRoom.id,
-      name: room.name,
-      topic: room.topic,
-      difficulty: room.difficulty,
-      rounds: room.rounds,
-      players: room.players,
-      matchId: matchResult.matchId ?? null,
-    };
+    // // 5 — Se matchId existir, salvar na sala // es
+    // if (matchResult.matchId) {
+    //   await this.roomRepo.attachMatch(createdRoom.id, matchResult.matchId);
+    // }
+
+    // // 6 — Retorno final
+    return createdRoom;
   }
 }
