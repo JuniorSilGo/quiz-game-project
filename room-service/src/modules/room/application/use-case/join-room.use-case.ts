@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as roomRepositoryInterface from '../../domain/repositories/room.repository.interface';
+import type { RoomRepository } from '../../domain/repositories/room.repository.interface';
 
 export interface JoinRoomInput {
   roomName: string;
@@ -20,31 +20,25 @@ export interface JoinRoomOutput {
 export class JoinRoomUseCase {
   constructor(
     @Inject('RoomRepository')
-    private readonly roomRepo: roomRepositoryInterface.RoomRepository,
+    private readonly roomRepository: RoomRepository,
   ) {}
 
-  async execute(input: JoinRoomInput): Promise<JoinRoomOutput> {
-    // 1 — Buscar sala
-    const room = await this.roomRepo.findByName(input.roomName);
+  // tipar o retorno posteriormente.
+  async execute(input: JoinRoomInput) {
+    const room = await this.roomRepository.findByName(input.roomName);
+
     if (!room) {
-      throw new Error('Room not found');
+      throw new Error('Sala não encontrada!');
     }
 
-    // 2 — Adicionar player (domínio)
-    room.addPlayer(input.userId);
+    if (room.players.includes(input.userId)) {
+      throw new Error('Usuário já está na sala.');
+    }
 
-    // 3 — Persistir player
-    await this.roomRepo.addPlayers(room.id!, [input.userId]);
+    await this.roomRepository.addPlayers(room.id!, input.userId);
 
-    // 4 — Retornar estado atualizado
-    return {
-      id: room.id!,
-      name: room.name,
-      players: room.players,
-      topic: room.topic,
-      difficulty: room.difficulty,
-      rounds: room.rounds,
-      matchId: room.matchId,
-    };
+    const updatedRoom = await this.roomRepository.findByName(input.roomName);
+
+    return updatedRoom;
   }
 }
