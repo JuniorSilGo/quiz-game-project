@@ -15,7 +15,7 @@ export class UserGrpcController {
   }
 
   @GrpcMethod('UserService', 'GetUser')
-  userId(payload: GetUserInputDTO) {
+  getUser(payload: GetUserInputDTO) {
     return this.getUserUseCase.execute(payload).then(toUserGrpcResponse);
   }
 
