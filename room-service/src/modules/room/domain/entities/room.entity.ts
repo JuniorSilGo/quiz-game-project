@@ -12,10 +12,8 @@ export class RoomEntity {
     public topic: string,
     public difficulty: string,
     public rounds: number,
-    public createdById: number,
-    public players: number[],
-    public currentRound: number,
-    public totalRounds: number,
+    public createdById: number, // equivale ao userOwnerId do proto
+    public players: number[], // equivale ao userPlayersId do proto
     public status: RoomStatus,
     public matchId: string | null,
   ) {}
