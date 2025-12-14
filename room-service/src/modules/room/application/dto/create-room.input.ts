@@ -5,4 +5,5 @@ export interface CreateRoomInput {
   rounds: number;
   createdById: number;
   players?: number[];
+  maxPlayers?: number;
 }

@@ -26,6 +26,19 @@ export class CreateRoomUseCase {
   // Atualizar os status da sala
 
   async execute(input: CreateRoomInput): Promise<RoomEntity> {
+    // Verificar se já existe uma sala com esse nome
+    const existingRoom = await this.roomRepository.findByName(input.name);
+    
+    if (existingRoom) {
+      // Se o usuário já está na sala, retorna ela (reconectar)
+      if (existingRoom.players.includes(input.createdById)) {
+        console.log(`Usuário ${input.createdById} reconectando à sala ${input.name}`);
+        return existingRoom;
+      }
+      // Se é outro usuário, erro
+      throw new Error(`Sala "${input.name}" já existe. Escolha outro nome ou entre na sala existente.`);
+    }
+
     const room = RoomFactory.create({
       name: input.name,
       topic: input.topic,

@@ -4,6 +4,8 @@ export interface RoomRepository {
 
   findByName(name: string): Promise<RoomEntity | null>;
 
+  findAvailable(): Promise<RoomEntity[]>;
+
   addPlayers(roomId: number, players: number): Promise<void>;
 
   attachMatch(roomId: number, matchId: string): Promise<void>;

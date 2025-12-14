@@ -5,4 +5,5 @@ export interface CreateRoomRequestDto {
   difficulty: string;
   rounds: number;
   userPlayersIds: number[];
+  maxPlayers?: number;
 }

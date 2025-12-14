@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { StatisticsGrpcController } from '../grpc/controllers/statistics.controller';
 import { GetUserStatsUseCase } from '../../application/use-cases/get-user-stats.usecase';
 import { GetRankingUseCase } from '../../application/use-cases/get-ranking.usecase';
+import { UpdateStatsUseCase } from '../../application/use-cases/update-stats.usecase';
 import { PrismaStatisticsRepository } from '../../domain/repositories/prisma-statistics.repository';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
@@ -25,11 +26,12 @@ import { join } from 'path';
     PrismaStatisticsRepository,
     GetUserStatsUseCase,
     GetRankingUseCase,
+    UpdateStatsUseCase,
     {
       provide: 'IStatisticsRepository',
       useClass: PrismaStatisticsRepository,
     },
   ],
-  exports: [GetUserStatsUseCase, GetRankingUseCase],
+  exports: [GetUserStatsUseCase, GetRankingUseCase, UpdateStatsUseCase],
 })
 export class StatisticsModule {}

@@ -4,11 +4,20 @@ package statistics;
 
 service StatisticsService {
   rpc GetUserStats (GetUserStatusRequest) returns (UserStatsResponse);
-  rpc GetRanking (GetUserStatusRequest) returns (RankingResponse);
+  rpc GetRanking (EmptyRequest) returns (RankingResponse);
+  rpc UpdateStats (UpdateStatsRequest) returns (UserStatsResponse);
 }
+
+message EmptyRequest {}
 
 message GetUserStatusRequest {
   int32 userId = 1;
+}
+
+message UpdateStatsRequest {
+  int32 userId = 1;
+  int32 scoreToAdd = 2;
+  bool won = 3;
 }
 
 message UserStatsResponse {

@@ -7,10 +7,10 @@ import { PrismaService } from './infrastructure/db/prisma.service';
 // Use Cases:
 import { JoinRoomUseCase } from './application/use-case/join-room.use-case';
 import { CreateRoomUseCase } from './application/use-case/create-room.use-case';
+import { ListRoomsUseCase } from './application/use-case/list-rooms.use-case';
 
 // Controllers:
 import { RoomGrpcController } from './interfaces/grpc/room.grpc.controller';
-import { RoomHttpController } from './interfaces/http/room.http.controller'; // Excluir depois de finalizar todas as integrações
 
 // Questions:
 import { QuestionsGrpcAdapter } from './infrastructure/grpc/questions.grpc.adapter';
@@ -34,8 +34,7 @@ import { join } from 'path';
       },
     ]),
   ],
-  // posteriormente excluir o roomhttpcontroller.
-  controllers: [RoomGrpcController, RoomHttpController],
+  controllers: [RoomGrpcController],
 
   providers: [
     PrismaService,
@@ -49,6 +48,7 @@ import { join } from 'path';
     },
     CreateRoomUseCase,
     JoinRoomUseCase,
+    ListRoomsUseCase,
   ],
 })
 export class RoomModule {}

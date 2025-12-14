@@ -16,6 +16,7 @@ export class RoomPrismaRepository implements RoomRepository {
         difficulty: room.difficulty,
         rounds: room.rounds,
         createdById: room.createdById,
+        maxPlayers: room.maxPlayers,
         players: {
           create: room.players.map((playerId) => ({ userId: playerId })),
         },
@@ -31,7 +32,7 @@ export class RoomPrismaRepository implements RoomRepository {
       (player) => player.userId,
     );
 
-    return new RoomEntity(
+    const entity = new RoomEntity(
       createdRoom.id,
       createdRoom.name,
       createdRoom.topic,
@@ -39,9 +40,11 @@ export class RoomPrismaRepository implements RoomRepository {
       createdRoom.rounds,
       createdRoom.createdById,
       playersId,
-      createdRoom.status as RoomStatus, // se der alugum erro no status, tente isso aqui RoomStatus[createdRoom.status as keyof typeof RoomStatus]
+      createdRoom.status as RoomStatus,
       createdRoom.matchId,
     );
+    entity.maxPlayers = createdRoom.maxPlayers;
+    return entity;
   }
 
   async findByName(name: string): Promise<RoomEntity | null> {
@@ -56,7 +59,7 @@ export class RoomPrismaRepository implements RoomRepository {
 
     const playersId: number[] = room.players.map((player) => player.userId);
 
-    return new RoomEntity(
+    const entity = new RoomEntity(
       room.id,
       room.name,
       room.topic,
@@ -67,6 +70,33 @@ export class RoomPrismaRepository implements RoomRepository {
       room.status as RoomStatus,
       room.matchId,
     );
+    entity.maxPlayers = room.maxPlayers;
+    return entity;
+  }
+
+  async findAvailable(): Promise<RoomEntity[]> {
+    const rooms = await this.prisma.room.findMany({
+      where: { status: 'WAITING' },
+      include: { players: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rooms.map((room) => {
+      const playersId = room.players.map((p) => p.userId);
+      const entity = new RoomEntity(
+        room.id,
+        room.name,
+        room.topic,
+        room.difficulty,
+        room.rounds,
+        room.createdById,
+        playersId,
+        room.status as RoomStatus,
+        room.matchId,
+      );
+      entity.maxPlayers = room.maxPlayers;
+      return entity;
+    });
   }
 
   async addPlayers(roomId: number, userId: number) {

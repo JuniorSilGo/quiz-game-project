@@ -9,4 +9,6 @@ export interface CreateRoomResponseDto {
   difficulty: string;
   rounds: number;
   matchId: string;
+  maxPlayers: number;
+  currentPlayers: number;
 }
