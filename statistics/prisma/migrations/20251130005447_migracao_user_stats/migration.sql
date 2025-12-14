@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "UserStats" (
+CREATE TABLE "statistics"."UserStats" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "score" BIGINT NOT NULL DEFAULT 0,
@@ -10,4 +10,4 @@ CREATE TABLE "UserStats" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UserStats_userId_key" ON "UserStats"("userId");
+CREATE UNIQUE INDEX "UserStats_userId_key" ON "statistics"."UserStats"("userId");

@@ -24,39 +24,42 @@ export class QuestionsGrpcAdapter implements QuestionsPort, OnModuleInit {
   ): Promise<GenerateQuestionsOutput> {
     console.log('➡️ Enviando para QuestionService:', input);
 
-    //   const generatedQuestions = await this.questionsService.GenerateQuestions({
-    //     topic: input.topic,
-    //     difficulty: input.difficulty,
-    //     quantity: input.quantity,
-    //   });
+    try {
+      // CHAMADA REAL DO GRPC (observable)
+      const observable = this.questionsService.GenerateQuestions({
+        topic: input.topic,
+        difficulty: input.difficulty,
+        quantity: input.quantity,
+      });
 
-    //   const response = await lastValueFrom(generatedQuestions);
+      // TRANSFORMA em Promise (agora você tem o RETORNO REAL)
+      const result = await lastValueFrom(observable);
 
-    //   console.log('⬅️ Retorno do QuestionService:', response);
+      console.log('⬅️ RETORNO REAL DO QUESTION SERVICE:', result);
 
-    //   return {
-    //     questions: response.questio
-    //   };
+      // Verifica se result é null ou undefined
+      if (!result) {
+        console.warn('⚠️ QuestionService retornou null/undefined');
+        return { questions: [] };
+      }
 
-    // CHAMADA REAL DO GRPC (observable)
-    const observable = this.questionsService.GenerateQuestions({
-      topic: input.topic,
-      difficulty: input.difficulty,
-      quantity: input.quantity,
-    });
+      // Verifica se result.questions existe e é um array
+      if (!Array.isArray(result.questions)) {
+        console.warn('⚠️ QuestionService retornou resultado sem array de perguntas:', result);
+        return { questions: [] };
+      }
 
-    // TRANSFORMA em Promise (agora você tem o RETORNO REAL)
-    const result = await lastValueFrom(observable);
-
-    console.log('⬅️ RETORNO REAL DO QUESTION SERVICE:', result);
-
-    // RETORNA PARA O DOMÍNIO NUM FORMATO PREVISÍVEL
-    return {
-      questions: result.questions.map((q) => ({
-        statement: q.statement,
-        alternatives: q.alternatives,
-        correctAnswer: q.correctAnswer,
-      })),
-    };
+      // RETORNA PARA O DOMÍNIO NUM FORMATO PREVISÍVEL
+      return {
+        questions: result.questions.map((q) => ({
+          statement: q.statement,
+          alternatives: q.alternatives,
+          correctAnswer: q.correctAnswer,
+        })),
+      };
+    } catch (error) {
+      console.error('❌ Erro ao chamar QuestionService:', error instanceof Error ? error.message : error);
+      return { questions: [] };
+    }
   }
 }

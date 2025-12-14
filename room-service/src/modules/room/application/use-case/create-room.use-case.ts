@@ -27,15 +27,19 @@ export class CreateRoomUseCase {
   async execute(input: CreateRoomInput): Promise<RoomEntity> {
     // Verificar se já existe uma sala com esse nome
     const existingRoom = await this.roomRepository.findByName(input.name);
-    
+
     if (existingRoom) {
       // Se o usuário já está na sala, retorna ela (reconectar)
       if (existingRoom.players.includes(input.createdById)) {
-        console.log(`Usuário ${input.createdById} reconectando à sala ${input.name}`);
+        console.log(
+          `Usuário ${input.createdById} reconectando à sala ${input.name}`,
+        );
         return existingRoom;
       }
       // Se é outro usuário, erro
-      throw new Error(`Sala "${input.name}" já existe. Escolha outro nome ou entre na sala existente.`);
+      throw new Error(
+        `Sala "${input.name}" já existe. Escolha outro nome ou entre na sala existente.`,
+      );
     }
 
     // 1. Criar a sala
@@ -60,8 +64,15 @@ export class CreateRoomUseCase {
       difficulty: room.difficulty,
       quantity: room.rounds,
     });
-    const generatedQuestions = questionsResult.questions;
+    const generatedQuestions = questionsResult.questions || [];
     console.log(`>>> Perguntas geradas: ${generatedQuestions.length}`);
+
+    // Se nenhuma pergunta foi gerada, continua mesmo assim
+    if (generatedQuestions.length === 0) {
+      console.warn(
+        '⚠️ Nenhuma pergunta foi gerada. A sala será criada sem perguntas.',
+      );
+    }
 
     // 3. Criar o match via match-service
     console.log('>>> 3. Criando match via match-service...');
@@ -73,7 +84,9 @@ export class CreateRoomUseCase {
       topic: room.topic,
       difficulty: room.difficulty,
     });
-    console.log(`>>> Match criado: ${matchResult.roomName}, rounds: ${matchResult.totalRounds}`);
+    console.log(
+      `>>> Match criado: ${matchResult.roomName}, rounds: ${matchResult.totalRounds}`,
+    );
 
     // 4. Atualizar a sala com o matchId (se necessário)
     // await this.roomRepository.attachMatch(createdRoom.id, matchResult.matchId);
