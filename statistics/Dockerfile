@@ -23,9 +23,12 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Copiar os arquivos proto necessários para gRPC
 COPY --from=builder /app/src/infrastructure/grpc/proto ./src/infrastructure/grpc/proto
 
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
 ENV NODE_ENV=production
 
 # statistics-service roda na porta 50050
 EXPOSE 50050
 
-CMD ["node", "dist/main"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

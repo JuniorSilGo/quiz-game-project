@@ -23,9 +23,12 @@ COPY --from=builder /app/proto ./proto
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
 ENV NODE_ENV=production
 
 # room-service: HTTP na 3000, gRPC na 50052
 EXPOSE 3000 50052
 
-CMD ["node", "dist/main"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
