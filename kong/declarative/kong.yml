@@ -5,7 +5,9 @@ _transform: true
 # SERVICES & ROUTES
 ################################
 services:
-  # Serviço de autenticação (login/registro) - NÃO protegido por JWT
+  # ─────────────────────────────────────────────────────────────────
+  # Auth Service - NÃO protegido por JWT (login/registro)
+  # ─────────────────────────────────────────────────────────────────
   - name: auth-service
     url: http://auth-service:3001
     routes:
@@ -13,30 +15,106 @@ services:
         paths:
           - /auth
         strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # ─────────────────────────────────────────────────────────────────
+  # Room Service - HTTP/GraphQL (protegido por JWT)
+  # ─────────────────────────────────────────────────────────────────
+  - name: room-service
+    url: http://room-service:3000
+    routes:
+      - name: room-route
+        paths:
+          - /rooms
+          - /graphql
+        strip_path: false
+        methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # ─────────────────────────────────────────────────────────────────
+  # Match Service - HTTP wrapper (se expor HTTP)
+  # ─────────────────────────────────────────────────────────────────
+  # Nota: match-service é gRPC (50053), Kong suporta gRPC mas 
+  # requer configuração específica. Se não expor HTTP, remova.
+  # - name: match-service
+  #   url: http://match-service:3000
+  #   routes:
+  #     - name: match-route
+  #       paths:
+  #         - /matches
+
+  # ─────────────────────────────────────────────────────────────────
+  # Statistics Service (se expor HTTP)
+  # ─────────────────────────────────────────────────────────────────
+  # - name: statistics-service
+  #   url: http://statistics-service:3000
+  #   routes:
+  #     - name: statistics-route
+  #       paths:
+  #         - /statistics
 
 ################################
 # CONSUMERS & JWT CREDENTIALS
 ################################
 consumers:
-  # Representa o emissor de tokens aceitos (seu micro-serviço de auth)
+  # Representa o emissor de tokens aceitos (seu auth-service)
   - username: auth-service-consumer
     custom_id: auth-service
     jwt_secrets:
       - algorithm: HS256
-        key: auth-service          # vai bater com o "iss" do JWT
+        key: auth-service          # deve bater com o "iss" do JWT
         secret: MEU_SUPER_SECRET   # mesmo valor do JWT_SECRET do auth-service
 
 ################################
 # PLUGINS
 ################################
 plugins:
-  # Plugin JWT protegendo o quiz-service (serviço de exemplo)
-  - name: jwt
-    service: quiz-service
+  # ─────────────────────────────────────────────────────────────────
+  # CORS Global - permite requisições de qualquer origem
+  # ─────────────────────────────────────────────────────────────────
+  - name: cors
     config:
-      key_claim_name: iss          # claim no token que deve bater com 'key' (auth-service)
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+      credentials: true
+      max_age: 3600
+
+  # ─────────────────────────────────────────────────────────────────
+  # Rate Limiting Global - proteção contra abuso
+  # ─────────────────────────────────────────────────────────────────
+  - name: rate-limiting
+    config:
+      minute: 100
+      policy: local
+
+  # ─────────────────────────────────────────────────────────────────
+  # JWT - Protege room-service (requer token válido)
+  # ─────────────────────────────────────────────────────────────────
+  - name: jwt
+    service: room-service
+    config:
+      key_claim_name: iss
       claims_to_verify:
-        - exp                      # verifica expiração
+        - exp
       secret_is_base64: false
       uri_param_names:
-        - jwt                      # opcional: permite ?jwt=token além do header Authorization
+        - jwt

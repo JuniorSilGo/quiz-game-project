@@ -1,6 +1,8 @@
-version: "3.9"
-
 services:
+  # ═══════════════════════════════════════════════════════════════════
+  # INFRAESTRUTURA
+  # ═══════════════════════════════════════════════════════════════════
+  
   postgres:
     image: postgres:15
     container_name: quiz_postgres
@@ -14,6 +16,11 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - quiz-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz_user -d quiz_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -34,31 +41,141 @@ services:
       timeout: 10s
       retries: 5
 
+  # ═══════════════════════════════════════════════════════════════════
+  # MICROSERVIÇOS
+  # ═══════════════════════════════════════════════════════════════════
+
   auth-service:
     build: ./auth-service
     container_name: auth_service
-    env_file: ./auth-service/.env
+    environment:
+      NODE_ENV: production
+      HTTP_PORT: 3001
+      GRPC_PORT: 50051
+      DATABASE_URL: postgresql://quiz_user:quiz_password@postgres:5432/quiz_db?schema=auth
+      JWT_SECRET: ${JWT_SECRET:-MEU_SUPER_SECRET}
+      JWT_ISSUER: auth-service
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     ports:
-      - "3001:3001"
-      - "50051:50051"
+      - "3001:3001"   # HTTP (para Kong)
+      - "50051:50051" # gRPC (para outros microserviços)
     networks:
       - quiz-net
+    restart: unless-stopped
 
   question-service:
     build: ./question-service
     container_name: question_service
-    env_file: ./question-service/.env
     environment:
+      NODE_ENV: production
       RABBITMQ_URL: amqp://quiz_user:quiz_password@rabbitmq:5672
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-mistralai/mistral-7b-instruct}
     depends_on:
       rabbitmq:
         condition: service_healthy
     ports:
+      - "50054:50054"
+    networks:
+      - quiz-net
+    restart: unless-stopped
+
+  room-service:
+    build: ./room-service
+    container_name: room_service
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://quiz_user:quiz_password@postgres:5432/quiz_db?schema=room
+      ROOM_GRPC_URL: 0.0.0.0:50052
+      AUTH_GRPC_URL: auth-service:50051
+      QUESTION_GRPC_URL: question-service:50054
+      MATCH_GRPC_URL: match-service:50053
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    ports:
+      - "3000:3000"   # HTTP/GraphQL
+      - "50052:50052" # gRPC
+    networks:
+      - quiz-net
+    restart: unless-stopped
+
+  match-service:
+    build: ./match-service
+    container_name: match_service
+    environment:
+      NODE_ENV: production
+      GRPC_PORT: 50053
+      AUTH_GRPC_URL: auth-service:50051
+      QUESTION_GRPC_URL: question-service:50054
+      ROOM_GRPC_URL: room-service:50052
+    depends_on:
+      - auth-service
+      - question-service
+    ports:
       - "50053:50053"
     networks:
       - quiz-net
+    restart: unless-stopped
+
+  statistics-service:
+    build: ./statistics
+    container_name: statistics_service
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://quiz_user:quiz_password@postgres:5432/quiz_db?schema=statistics
+      AUTH_GRPC_URL: auth-service:50051
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    ports:
+      - "50050:50050"
+    networks:
+      - quiz-net
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════
+  # API GATEWAY
+  # ═══════════════════════════════════════════════════════════════════
+
+  kong:
+    image: kong:3.9
+    container_name: quiz_kong
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    volumes:
+      - ./kong/declarative:/kong/declarative:ro
+    ports:
+      - "8000:8000"   # Proxy (entrada pública)
+      - "8001:8001"   # Admin API
+    networks:
+      - quiz-net
+    depends_on:
+      - auth-service
+      - room-service
+      - match-service
+      - question-service
+      - statistics-service
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pgdata:
