@@ -15,6 +15,25 @@ services:
     networks:
       - quiz-net
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: quiz_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: quiz_user
+      RABBITMQ_DEFAULT_PASS: quiz_password
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - quiz-net
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   auth-service:
     build: ./auth-service
     container_name: auth_service
@@ -27,8 +46,23 @@ services:
     networks:
       - quiz-net
 
+  question-service:
+    build: ./question-service
+    container_name: question_service
+    env_file: ./question-service/.env
+    environment:
+      RABBITMQ_URL: amqp://quiz_user:quiz_password@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "50053:50053"
+    networks:
+      - quiz-net
+
 volumes:
   pgdata:
+  rabbitmq_data:
 
 networks:
   quiz-net:
