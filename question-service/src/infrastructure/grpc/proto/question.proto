@@ -21,3 +21,4 @@ message Question {
 message GenerateQuestionResponse {
   repeated Question questions = 1;
 }
+
