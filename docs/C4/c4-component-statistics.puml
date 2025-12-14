@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(statistics, "Statistics", "NestJS + gRPC", "Gerenciamento de estatísticas e ranking")
+
+Component(grpcController, "StatisticsGrpcController", "gRPC Controller", "GetUserStats, GetRanking")
+
+Component(getUserUC, "GetUserStatsUseCase", "Application / Use Case", "Busca estatísticas do usuário")
+Component(getRankingUC, "GetRankingUseCase", "Application / Use Case", "Busca ranking ordenado")
+
+Component(statsService, "StatisticsService", "Domain Service", "Atualiza stats após partidas")
+
+Component(repositoryPort, "IStatisticsRepository", "Domain Port", "findByUserId, findAllOrderedByScore, upsertUserStats")
+
+Component(prismaRepo, "PrismaStatisticsRepository", "Adapter (Prisma)", "Persistência PostgreSQL")
+Component(prisma, "PrismaClient", "Infrastructure", "Acesso ao banco")
+
+Component(strategy, "DefaultStatsStrategy", "Domain Strategy", "Cálculo de score")
+
+Component(authGrpcClient, "Auth Service (gRPC Client)", "External Service", "Consulta usuário")
+
+Component(entity, "UserStats", "Domain Entity", "userId, score, wins, matches")
+
+Rel(grpcController, getUserUC, "chama")
+Rel(grpcController, getRankingUC, "chama")
+
+Rel(getUserUC, repositoryPort, "consulta")
+Rel(getRankingUC, repositoryPort, "consulta ranking")
+
+Rel(statsService, repositoryPort, "find / upsert")
+Rel(statsService, strategy, "calcula score")
+Rel(statsService, authGrpcClient, "valida usuário (opcional)")
+
+Rel(repositoryPort, prismaRepo, "implementa")
+Rel(prismaRepo, prisma, "usa")
+
+Rel(prismaRepo, entity, "mapeia")
+
+@enduml

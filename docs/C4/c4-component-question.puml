@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(questionService, "Question Service", "NestJS", "Geração de perguntas via IA")
+
+Component(controller, "QuestionController", "gRPC Controller", "GenerateQuestions / Enqueue / JobStatus")
+
+Component(useCase, "GenerateQuestionsUseCase", "Application / Use Case", "Orquestra geração de perguntas")
+
+Component(promptBuilder, "QuestionPromptBuilder", "Builder", "Monta prompt final")
+Component(strategyFactory, "DifficultyStrategyFactory", "Factory", "Seleciona estratégia de dificuldade")
+
+Component(gateway, "RetryingQuestionGenerationGateway", "Gateway", "Retry síncrono / base assíncrona")
+Component(openRouter, "OpenRouterClient", "External Gateway", "Chamada IA (OpenRouter)")
+Component(sanitizer, "SanitizerPipeline", "Chain of Responsibility", "Normaliza JSON")
+
+Component(queueService, "QuestionQueueService", "Messaging Service", "Enfileira e rastreia jobs")
+Component(consumer, "QuestionConsumerService", "RabbitMQ Consumer", "Processa jobs")
+Component(deadLetter, "DeadLetterHandlerService", "DLQ Handler", "Gerencia falhas finais")
+
+Component(rabbit, "RabbitMQ", "Message Broker")
+
+Rel(controller, useCase, "chama (sync)")
+Rel(controller, queueService, "enfileira (async)")
+
+Rel(useCase, promptBuilder, "constrói prompt")
+Rel(useCase, strategyFactory, "aplica dificuldade")
+Rel(useCase, gateway, "gera perguntas")
+
+Rel(gateway, openRouter, "delegates")
+Rel(openRouter, sanitizer, "sanitiza resposta")
+
+Rel(queueService, rabbit, "publica mensagens")
+Rel(rabbit, consumer, "entrega jobs")
+
+Rel(consumer, useCase, "executa geração")
+Rel(consumer, deadLetter, "encaminha falhas")
+
+@enduml

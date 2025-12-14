@@ -1,0 +1,44 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(auth, "Auth Service", "NestJS + gRPC", "Autenticação e gestão de usuários")
+
+Component(authGrpcCtrl, "AuthGrpcController", "gRPC Controller", "Login, ValidateToken")
+Component(userGrpcCtrl, "UserGrpcController", "gRPC Controller", "GetUser, RegisterUser")
+
+Component(loginUC, "LoginUseCase", "Application", "Valida credenciais")
+Component(registerUC, "RegisterUserUseCase", "Application", "Cria usuário")
+Component(getUserUC, "GetUserUseCase", "Application", "Busca usuário por ID")
+Component(issueTokenUC, "IssueTokenUseCase", "Application", "Emite JWT")
+Component(validateTokenUC, "ValidateTokenUseCase", "Application", "Valida JWT")
+
+Component(userEntity, "User", "Domain Entity", "id, username, email, password, timestamps")
+
+Component(userRepoPort, "UserRepositoryPort", "Domain Port", "Persistência de usuários")
+Component(jwtPort, "JwtServicePort", "Application Port", "Assinatura e validação de JWT")
+
+Component(prismaRepo, "PrismaUserRepositoryPort", "Adapter (Prisma)", "PostgreSQL")
+Component(jwtAdapter, "NestJwtService", "Adapter (@nestjs/jwt)", "JWT Provider")
+Component(prisma, "PrismaService", "Infrastructure", "PrismaClient")
+
+Rel(authGrpcCtrl, loginUC, "chama")
+Rel(authGrpcCtrl, validateTokenUC, "chama")
+Rel(authGrpcCtrl, issueTokenUC, "chama")
+
+Rel(userGrpcCtrl, registerUC, "chama")
+Rel(userGrpcCtrl, getUserUC, "chama")
+
+Rel(loginUC, userRepoPort, "findByLogin")
+Rel(registerUC, userRepoPort, "create")
+Rel(getUserUC, userRepoPort, "getById")
+
+Rel(issueTokenUC, jwtPort, "sign")
+Rel(validateTokenUC, jwtPort, "verify")
+
+Rel(userRepoPort, prismaRepo, "implementa")
+Rel(jwtPort, jwtAdapter, "implementa")
+
+Rel(prismaRepo, prisma, "usa")
+Rel(prismaRepo, userEntity, "mapeia")
+
+@enduml

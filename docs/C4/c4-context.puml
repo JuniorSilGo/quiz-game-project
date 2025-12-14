@@ -1,0 +1,14 @@
+@startuml
+title Quiz Game Project - System Context
+
+actor Player as player
+
+rectangle "Quiz Game Project" {
+}
+
+rectangle "OpenRouter API\n(IA de Perguntas)" as openRouter
+
+player --> "Quiz Game Project" : Joga partidas\nResponde perguntas\nConsulta ranking
+"Quiz Game Project" --> openRouter : Geração de perguntas
+
+@enduml

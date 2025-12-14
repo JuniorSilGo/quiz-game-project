@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(player, "Player", "Usuário que joga o quiz")
+
+System_Boundary(quiz, "Quiz Game Project") {
+
+    Container(auth, "Auth Service", "NestJS + gRPC", "Autenticação e JWT")
+    Container(room, "Room Service", "NestJS + gRPC", "Gerenciamento de salas")
+    Container(match, "Match Service", "NestJS + gRPC", "Lógica da partida")
+    Container(question, "Question Service", "NestJS + gRPC", "Geração de perguntas")
+    Container(statistics, "Statistics Service", "NestJS + gRPC", "Ranking e histórico")
+
+    ContainerDb(authDb, "Auth DB", "PostgreSQL", "Usuários")
+    ContainerDb(statDb, "Statistics DB", "PostgreSQL", "Estatísticas")
+}
+
+System_Ext(openRouter, "OpenRouter API", "IA para perguntas")
+
+Rel(player, auth, "Login / Registro", "gRPC")
+Rel(player, room, "Entrar em sala", "gRPC")
+Rel(player, match, "Responder perguntas", "gRPC")
+
+Rel(room, auth, "Valida usuário", "gRPC")
+Rel(room, match, "Inicia partida", "gRPC")
+
+Rel(match, auth, "Consulta usuário", "gRPC")
+Rel(match, question, "Solicita perguntas", "gRPC")
+Rel(match, statistics, "Envia resultados", "gRPC")
+
+Rel(question, openRouter, "Gera perguntas", "HTTPS")
+
+Rel(auth, authDb, "Persistência", "Prisma")
+Rel(statistics, statDb, "Persistência", "Prisma")
+
+@enduml

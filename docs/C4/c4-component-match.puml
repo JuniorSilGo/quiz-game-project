@@ -1,0 +1,44 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(match, "Match Service (NestJS)", "gRPC", "Gerenciamento de partidas em tempo real")
+
+Component(grpcController, "MatchGrpcController", "Controller gRPC", "CreateMatch, Answer, GetMatchStatus, GetMatchRanking")
+
+Component(useCaseCreate, "CreateMatchUseCase", "Application / Use Case", "Cria e inicializa uma partida")
+Component(useCaseAnswer, "AnswerQuestionUseCase", "Application / Use Case", "Processa resposta e calcula pontuação")
+Component(useCaseStatus, "GetMatchStatusUseCase", "Application / Use Case", "Consulta status da partida")
+Component(useCaseRanking, "GetMatchRankingUseCase", "Application / Use Case", "Consulta ranking da partida")
+Component(useCaseAdvance, "AdvanceExpiredRoundsUseCase", "Application / Use Case", "Avança rodadas expiradas")
+
+Component(timerService, "MatchTimerService", "Scheduler", "Dispara verificação de tempo dos rounds")
+
+Component(repositoryPort, "MatchRepositoryPort", "Repository Port", "save, findByRoomName, exists, getAll")
+Component(repositoryImpl, "InMemoryMatchRepository", "Adapter", "Persistência em memória")
+
+Component(entity, "Match", "Domain Entity", "rounds, scores, timer, questions")
+
+Component(questionGrpcClient, "Question Service", "gRPC Client", "Fornece perguntas")
+Component(authGrpcClient, "Auth Service", "gRPC Client", "Valida usuários")
+
+Rel(grpcController, useCaseCreate, "chama")
+Rel(grpcController, useCaseAnswer, "chama")
+Rel(grpcController, useCaseStatus, "chama")
+Rel(grpcController, useCaseRanking, "chama")
+
+Rel(useCaseCreate, repositoryPort, "save")
+Rel(useCaseCreate, questionGrpcClient, "usa")
+
+Rel(useCaseAnswer, repositoryPort, "find / save")
+Rel(useCaseAnswer, authGrpcClient, "valida usuário")
+
+Rel(useCaseStatus, repositoryPort, "find")
+Rel(useCaseRanking, repositoryPort, "find")
+
+Rel(timerService, useCaseAdvance, "executa periodicamente")
+Rel(useCaseAdvance, repositoryPort, "getAll / save")
+
+Rel(repositoryPort, repositoryImpl, "implementa")
+Rel(repositoryImpl, entity, "persiste")
+
+@enduml

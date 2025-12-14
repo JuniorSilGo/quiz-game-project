@@ -1,0 +1,39 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(room, "Room Service", "NestJS + gRPC", "Gerenciamento de salas do quiz")
+
+Component(grpcController, "RoomGrpcController", "gRPC Controller", "CreateRoom, JoinRoom")
+
+Component(createRoomUC, "CreateRoomUseCase", "Application / Use Case", "Cria sala e gera perguntas")
+Component(joinRoomUC, "JoinRoomUseCase", "Application / Use Case", "Usuário entra em uma sala")
+
+Component(roomFactory, "RoomFactory", "Domain Service", "Valida regras e cria RoomEntity")
+
+Component(roomRepoPort, "RoomRepository", "Domain Port", "create(), findByName(), addPlayers()")
+Component(questionsPort, "QuestionsPort", "Domain Port", "generateQuestions()")
+
+Component(prismaRepo, "RoomPrismaRepository", "Adapter (Prisma)", "Persistência PostgreSQL")
+Component(prisma, "PrismaService", "Infrastructure", "PrismaClient")
+
+Component(questionsGrpc, "QuestionService (gRPC Client)", "External Service", "Geração de perguntas")
+
+Component(roomEntity, "RoomEntity", "Domain Entity", "name, topic, difficulty, rounds, players, status")
+
+Rel(grpcController, createRoomUC, "chama")
+Rel(grpcController, joinRoomUC, "chama")
+
+Rel(createRoomUC, roomFactory, "cria RoomEntity")
+Rel(createRoomUC, roomRepoPort, "persiste sala")
+Rel(createRoomUC, questionsPort, "gera perguntas")
+
+Rel(joinRoomUC, roomRepoPort, "busca e atualiza sala")
+
+Rel(roomRepoPort, prismaRepo, "implementa")
+Rel(prismaRepo, prisma, "usa")
+
+Rel(questionsPort, questionsGrpc, "implementa")
+
+Rel(prismaRepo, roomEntity, "mapeia")
+
+@enduml
