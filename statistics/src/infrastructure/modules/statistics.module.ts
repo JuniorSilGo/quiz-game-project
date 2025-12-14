@@ -14,8 +14,8 @@ import { join } from 'path';
         transport: Transport.GRPC,
         options: {
           package: 'auth',
-          protoPath: join(__dirname, '../../../../protos/auth.proto'),
-          url: '0.0.0.0:50056',
+          protoPath: join(process.cwd(), 'src/infrastructure/grpc/proto/auth.proto'),
+          url: process.env.AUTH_GRPC_URL ?? '0.0.0.0:50051',
         },
       },
     ]),

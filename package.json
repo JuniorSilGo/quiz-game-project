@@ -1,13 +1,13 @@
 {
   "dependencies": {
-    "@grpc/grpc-js": "^1.14.0",
-    "@grpc/proto-loader": "^0.8.0",
     "@nestjs/microservices": "^11.1.8",
     "@nestjs/platform-socket.io": "^11.1.8",
     "@prisma/client": "^6.18.0",
     "prisma": "^6.18.0"
   },
   "devDependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@grpc/proto-loader": "^0.8.0",
     "prettier": "^3.6.2"
   }
 }

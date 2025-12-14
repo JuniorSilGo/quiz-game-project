@@ -16,6 +16,8 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+# Copiar os arquivos proto necessários para gRPC
+COPY --from=builder /app/src/infrastructure/grpc/proto ./src/infrastructure/grpc/proto
 
 ENV NODE_ENV=production
 

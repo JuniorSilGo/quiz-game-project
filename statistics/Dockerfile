@@ -20,6 +20,8 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# Copiar os arquivos proto necessários para gRPC
+COPY --from=builder /app/src/infrastructure/grpc/proto ./src/infrastructure/grpc/proto
 
 ENV NODE_ENV=production
 

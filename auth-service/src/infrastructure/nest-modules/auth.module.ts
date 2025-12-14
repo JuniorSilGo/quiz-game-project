@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthGrpcController } from '../../infrastructure/grpc/controllers/auth/auth.grpc.controller';
+import { AuthHttpController } from '../../infrastructure/http/controllers/auth.http.controller';
 import { UserModule } from './user.module';
 import { ValidateTokenUseCase } from '../../application/use-cases/auth/validate-token.use-case';
 import { IssueTokenUseCase } from '../../application/use-cases/auth/issue-token.use-case';
@@ -34,7 +35,7 @@ const jwtServiceProvider = {
     RegisterUserUseCase,
     LoginUseCase,
   ],
-  controllers: [AuthGrpcController],
+  controllers: [AuthGrpcController, AuthHttpController],
 })
 export class AuthModule {
 }
