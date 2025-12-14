@@ -14,6 +14,8 @@ export interface JoinRoomOutput {
   difficulty: string;
   rounds: number;
   matchId: string | null;
+  maxPlayers: number;
+  currentPlayers: number;
 }
 
 @Injectable()
@@ -31,8 +33,13 @@ export class JoinRoomUseCase {
       throw new Error('Sala não encontrada!');
     }
 
+    // Se usuário já está na sala, apenas retorna a sala (reconecta)
     if (room.players.includes(input.userId)) {
-      throw new Error('Usuário já está na sala.');
+      return room;
+    }
+
+    if (!room.canJoin()) {
+      throw new Error(`Sala cheia! Máximo de ${room.maxPlayers} jogadores.`);
     }
 
     await this.roomRepository.addPlayers(room.id!, input.userId);

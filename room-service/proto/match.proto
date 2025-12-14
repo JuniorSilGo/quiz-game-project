@@ -3,8 +3,8 @@ syntax = "proto3";
 package match;
 
 service MatchService {
-  rpc CreateMatchRequest (CreateMatchRequest) returns (CreatedMatchResponse);
-  rpc GetMatchStatusResponse (GetStatusRequest) returns (MatchStatusResponse);
+  rpc CreateMatch (CreateMatchRequest) returns (CreatedMatchResponse);
+  rpc GetMatchStatus (GetStatusRequest) returns (MatchStatusResponse);
   rpc Answer (AnswerRequest) returns (AnswerResponse);
   rpc GetMatchRanking (MatchRankingRequest) returns (MatchRankingResponse);
 }
@@ -16,19 +16,21 @@ message GeneratedQuestion {
 }
 
 message CreateMatchRequest {
-  int32 userId = 1;
-  repeated GeneratedQuestion questions = 2;
-  repeated int32 userPlayersIds = 3;
-  string difficulty = 4;
-  string topic = 5;
+  string roomName = 1;
+  int32 userId = 2;
+  repeated GeneratedQuestion questions = 3;
+  repeated int32 userPlayersIds = 4;
+  string difficulty = 5;
+  string topic = 6;
 }
 
 message CreatedMatchResponse {
-  int32 currentRound = 1;
-  int32 totalRounds = 2;
-  repeated int32 userPlayersIds = 3;
-  string difficulty = 4;
-  string topic = 5;
+  string roomName = 1;
+  int32 currentRound = 2;
+  int32 totalRounds = 3;
+  repeated int32 userPlayersIds = 4;
+  string difficulty = 5;
+  string topic = 6;
 }
 
 message GetStatusRequest {

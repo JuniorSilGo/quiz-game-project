@@ -9,8 +9,10 @@ export class RoomFactory {
       throw new Error('Entre com uma dificuldade válida para sala.');
     if (!data.rounds || data.rounds <= 0)
       throw new Error('O número mínimo de rounds é 1.');
+    if (data.maxPlayers && data.maxPlayers < 2)
+      throw new Error('O número mínimo de jogadores é 2.');
 
-    return new RoomEntity(
+    const room = new RoomEntity(
       null,
       data.name,
       data.topic,
@@ -21,5 +23,9 @@ export class RoomFactory {
       RoomStatus.WAITING,
       null,
     );
+
+    room.maxPlayers = data.maxPlayers ?? 4;
+
+    return room;
   }
 }

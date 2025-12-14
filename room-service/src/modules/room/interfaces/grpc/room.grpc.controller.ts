@@ -9,6 +9,7 @@ import type { CreateRoomRequestDto } from './dtos/create-room.request.dto';
 import { CreateRoomResponseDto } from './dtos/create-room.response.dto';
 import { CreateRoomInput } from '../../application/dto/create-room.input';
 import { JoinRoomUseCase } from '../../application/use-case/join-room.use-case';
+import { ListRoomsUseCase } from '../../application/use-case/list-rooms.use-case';
 import type { UserRoomRequestDto } from './dtos/user-room.request.dto';
 // import { StartMatchDto } from '../../application/dto/start-match.dto';
 // import { JoinRoomDto } from '../../application/dto/join-room.dto';
@@ -19,6 +20,7 @@ export class RoomGrpcController {
     private readonly createRoom: CreateRoomUseCase,
     // @Inject(StartMatchUseCase) private readonly startMatch: StartMatchUseCase,
     private readonly joinRoom: JoinRoomUseCase,
+    private readonly listRooms: ListRoomsUseCase,
   ) {}
 
   @GrpcMethod('RoomService', 'CreateRoom')
@@ -32,6 +34,7 @@ export class RoomGrpcController {
       rounds: request.rounds,
       createdById: request.userId,
       players: request.userPlayersIds ?? [],
+      maxPlayers: request.maxPlayers ?? 4,
     };
 
     const room = await this.createRoom.execute(input);
@@ -47,6 +50,8 @@ export class RoomGrpcController {
       matchQtd: room.rounds,
       matchId: room.matchId ?? '',
       status: room.status,
+      maxPlayers: room.maxPlayers,
+      currentPlayers: room.currentPlayers,
     };
 
     return response;
@@ -77,6 +82,30 @@ export class RoomGrpcController {
       matchQtd: room.rounds,
       matchId: room.matchId ?? '',
       status: room.status,
+      maxPlayers: room.maxPlayers,
+      currentPlayers: room.currentPlayers,
+    };
+  }
+
+  @GrpcMethod('RoomService', 'ListRooms')
+  async list() {
+    const rooms = await this.listRooms.execute();
+
+    return {
+      rooms: rooms.map((room) => ({
+        id: room.id,
+        name: room.name,
+        topic: room.topic,
+        difficulty: room.difficulty,
+        rounds: room.rounds,
+        userOwnerId: room.createdById,
+        userPlayersId: room.players,
+        matchQtd: room.rounds,
+        matchId: room.matchId ?? '',
+        status: room.status,
+        maxPlayers: room.maxPlayers,
+        currentPlayers: room.currentPlayers,
+      })),
     };
   }
 

@@ -5,7 +5,16 @@ package room;
 service RoomService {
   rpc CreateRoom (CreateRoomRequest) returns (RoomStatusResponse);
   rpc JoinRoom (UserRoomRequest) returns (RoomStatusResponse);
+  rpc ListRooms (ListRoomsRequest) returns (ListRoomsResponse);
   rpc StartMatch (StartMatchRequest) returns (MatchStatusResponse);
+}
+
+message ListRoomsRequest {
+  string status = 1;
+}
+
+message ListRoomsResponse {
+  repeated RoomStatusResponse rooms = 1;
 }
 
 message CreateRoomRequest {
@@ -15,6 +24,7 @@ message CreateRoomRequest {
   string difficulty = 4;
   int32 rounds = 5;
   repeated int32 userPlayersIds = 6;
+  int32 maxPlayers = 7;
 }
 
 message UserRoomRequest {
@@ -33,6 +43,8 @@ message RoomStatusResponse {
   string difficulty = 8;
   int32 rounds = 9;
   string matchId = 10;
+  int32 maxPlayers = 11;
+  int32 currentPlayers = 12;
 }
 
 message StartMatchRequest {

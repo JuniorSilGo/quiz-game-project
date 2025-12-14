@@ -20,6 +20,7 @@ model Room {
   updatedAt    DateTime     @updatedAt
   currentRound Int          @default(0)
   totalRounds  Int          @default(0)
+  maxPlayers   Int          @default(4)
   players      RoomPlayer[]
 }
 

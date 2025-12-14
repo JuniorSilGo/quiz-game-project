@@ -64,6 +64,51 @@ export class PrismaStatisticsRepository
     });
   }
 
+  async incrementStats(
+    userId: number,
+    scoreToAdd: number,
+    won: boolean
+  ): Promise<UserStats> {
+    // Primeiro verifica se existe, se não, cria
+    const existing = await this.prisma.userStats.findUnique({
+      where: { userId },
+    });
+
+    if (!existing) {
+      const created = await this.prisma.userStats.create({
+        data: {
+          userId,
+          score: BigInt(scoreToAdd),
+          wins: BigInt(won ? 1 : 0),
+          matches: BigInt(1),
+        },
+      });
+      return new UserStats(
+        Number(created.userId),
+        Number(created.score),
+        Number(created.wins),
+        Number(created.matches),
+      );
+    }
+
+    // Incrementa os valores
+    const updated = await this.prisma.userStats.update({
+      where: { userId },
+      data: {
+        score: { increment: scoreToAdd },
+        wins: won ? { increment: 1 } : undefined,
+        matches: { increment: 1 },
+      },
+    });
+
+    return new UserStats(
+      Number(updated.userId),
+      Number(updated.score),
+      Number(updated.wins),
+      Number(updated.matches),
+    );
+  }
+
   async onModuleDestroy() {
     await this.prisma.$disconnect();
   }

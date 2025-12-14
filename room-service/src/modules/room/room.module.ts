@@ -7,13 +7,14 @@ import { PrismaService } from './infrastructure/db/prisma.service';
 // Use Cases:
 import { JoinRoomUseCase } from './application/use-case/join-room.use-case';
 import { CreateRoomUseCase } from './application/use-case/create-room.use-case';
+import { ListRoomsUseCase } from './application/use-case/list-rooms.use-case';
 
 // Controllers:
 import { RoomGrpcController } from './interfaces/grpc/room.grpc.controller';
-import { RoomHttpController } from './interfaces/http/room.http.controller'; // Excluir depois de finalizar todas as integrações
 
-// Questions:
+// Adapters gRPC:
 import { QuestionsGrpcAdapter } from './infrastructure/grpc/questions.grpc.adapter';
+import { MatchGrpcAdapter } from './infrastructure/grpc/match.grpc.adapter';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
@@ -24,7 +25,7 @@ import { join } from 'path';
         name: 'QUESTION_GRPC_CLIENT',
         transport: Transport.GRPC,
         options: {
-          url: process.env.QUESTION_GRPC_URL ?? 'localhost:50052',
+          url: process.env.QUESTION_GRPC_URL ?? 'localhost:50054',
           package: 'question',
           protoPath: join(process.cwd(), 'proto/question.proto'),
           loader: {
@@ -32,10 +33,21 @@ import { join } from 'path';
           },
         },
       },
+      {
+        name: 'MATCH_GRPC_CLIENT',
+        transport: Transport.GRPC,
+        options: {
+          url: process.env.MATCH_GRPC_URL ?? 'localhost:50053',
+          package: 'match',
+          protoPath: join(process.cwd(), 'proto/match.proto'),
+          loader: {
+            keepCase: true,
+          },
+        },
+      },
     ]),
   ],
-  // posteriormente excluir o roomhttpcontroller.
-  controllers: [RoomGrpcController, RoomHttpController],
+  controllers: [RoomGrpcController],
 
   providers: [
     PrismaService,
@@ -47,8 +59,13 @@ import { join } from 'path';
       provide: 'QuestionsPort',
       useClass: QuestionsGrpcAdapter,
     },
+    {
+      provide: 'MatchPort',
+      useClass: MatchGrpcAdapter,
+    },
     CreateRoomUseCase,
     JoinRoomUseCase,
+    ListRoomsUseCase,
   ],
 })
 export class RoomModule {}

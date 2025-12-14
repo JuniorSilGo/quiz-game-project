@@ -1,14 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Transport } from '@nestjs/microservices';
+import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { join } from 'path';
 
 async function bootstrap() {
-  // 🟦 Cria aplicação HTTP
-  const app = await NestFactory.create(AppModule, { cors: true });
-
-  // 🟥 Conecta o microserviço gRPC na porta 50052
-  app.connectMicroservice({
+  // Cria apenas o microserviço gRPC (sem HTTP)
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
     transport: Transport.GRPC,
     options: {
       package: 'room',
@@ -18,11 +15,8 @@ async function bootstrap() {
     },
   });
 
-  await app.startAllMicroservices();
-  const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  await app.listen();
 
-  console.log(`HTTP rodando em http://localhost:${port}`);
   console.log(`gRPC rodando em ${process.env.ROOM_GRPC_URL ?? '0.0.0.0:50052'}`);
 }
 void bootstrap();

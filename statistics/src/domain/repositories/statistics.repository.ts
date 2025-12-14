@@ -37,6 +37,32 @@ export class StatisticsRepository implements IStatisticsRepository {
     });
   }
 
+  async incrementStats(userId: number, scoreToAdd: number, won: boolean) {
+    const existing = await this.prisma.userStats.findUnique({
+      where: { userId },
+    });
+
+    if (!existing) {
+      return this.prisma.userStats.create({
+        data: {
+          userId,
+          score: BigInt(scoreToAdd),
+          wins: BigInt(won ? 1 : 0),
+          matches: BigInt(1),
+        },
+      });
+    }
+
+    return this.prisma.userStats.update({
+      where: { userId },
+      data: {
+        score: { increment: scoreToAdd },
+        wins: won ? { increment: 1 } : undefined,
+        matches: { increment: 1 },
+      },
+    });
+  }
+
   async onModuleDestroy() {
     await this.prisma.$disconnect();
   }

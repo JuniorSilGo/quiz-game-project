@@ -4,9 +4,7 @@ import { CreateRoomInput } from '../dto/create-room.input';
 import { RoomEntity } from '../../domain/entities/room.entity';
 import { Inject } from '@nestjs/common';
 import type { QuestionsPort } from '../../domain/repositories/questions.port';
-
-// import * as questionsPort from '../../domain/repositories/questions.port';
-// import * as matchPort from '../../domain/repositories/match.port';
+import type { MatchPort } from '../../domain/repositories/match.port';
 
 export class CreateRoomUseCase {
   constructor(
@@ -16,16 +14,32 @@ export class CreateRoomUseCase {
     @Inject('QuestionsPort')
     private readonly questions: QuestionsPort,
 
-    // private readonly match: matchPort.MatchPort,
+    @Inject('MatchPort')
+    private readonly match: MatchPort,
   ) {}
 
   // fluxo:
-  // Criar a sala/ salvar no banco ->
-  // Requisição das perguntas/ salvar no banco ->
-  // Requisição para criar uma partida passando as informações necessárias ->
-  // Atualizar os status da sala
+  // 1. Criar a sala / salvar no banco
+  // 2. Requisição das perguntas via question-service
+  // 3. Requisição para criar uma partida via match-service
+  // 4. Atualizar status da sala
 
   async execute(input: CreateRoomInput): Promise<RoomEntity> {
+    // Verificar se já existe uma sala com esse nome
+    const existingRoom = await this.roomRepository.findByName(input.name);
+    
+    if (existingRoom) {
+      // Se o usuário já está na sala, retorna ela (reconectar)
+      if (existingRoom.players.includes(input.createdById)) {
+        console.log(`Usuário ${input.createdById} reconectando à sala ${input.name}`);
+        return existingRoom;
+      }
+      // Se é outro usuário, erro
+      throw new Error(`Sala "${input.name}" já existe. Escolha outro nome ou entre na sala existente.`);
+    }
+
+    // 1. Criar a sala
+    console.log('>>> 1. Criando sala...');
     const room = RoomFactory.create({
       name: input.name,
       topic: input.topic,
@@ -33,34 +47,37 @@ export class CreateRoomUseCase {
       rounds: input.rounds,
       createdById: input.createdById,
       players: input.players,
+      maxPlayers: input.maxPlayers,
     });
 
     const createdRoom = await this.roomRepository.create(room);
+    console.log(`>>> Sala criada: ${createdRoom.name} (ID: ${createdRoom.id})`);
 
-    // // 3 — Gerar perguntas via question-service
-    const generatedQuestions = await this.questions.generateQuestions({
+    // 2. Gerar perguntas via question-service
+    console.log('>>> 2. Gerando perguntas via question-service...');
+    const questionsResult = await this.questions.generateQuestions({
       topic: room.topic,
       difficulty: room.difficulty,
       quantity: room.rounds,
     });
+    const generatedQuestions = questionsResult.questions;
+    console.log(`>>> Perguntas geradas: ${generatedQuestions.length}`);
 
-    console.log('QUESTIONS RAW RESPONSE:', generatedQuestions);
+    // 3. Criar o match via match-service
+    console.log('>>> 3. Criando match via match-service...');
+    const matchResult = await this.match.createMatch({
+      roomName: createdRoom.name,
+      userId: room.createdById,
+      questions: generatedQuestions,
+      userPlayersIds: room.players,
+      topic: room.topic,
+      difficulty: room.difficulty,
+    });
+    console.log(`>>> Match criado: ${matchResult.roomName}, rounds: ${matchResult.totalRounds}`);
 
-    // // 4 — Criar o match via match-service
-    // const matchResult = await this.match.createMatch({
-    //   userId: room.createdById,
-    //   questions: generatedQuestions,
-    //   userPlayersIds: room.players,
-    //   topic: room.topic,
-    //   difficulty: room.difficulty,
-    // });
+    // 4. Atualizar a sala com o matchId (se necessário)
+    // await this.roomRepository.attachMatch(createdRoom.id, matchResult.matchId);
 
-    // // 5 — Se matchId existir, salvar na sala // es
-    // if (matchResult.matchId) {
-    //   await this.roomRepo.attachMatch(createdRoom.id, matchResult.matchId);
-    // }
-
-    // // 6 — Retorno final
     return createdRoom;
   }
 }
