@@ -26,7 +26,45 @@ git clone https://github.com/JuniorSilGo/quiz-game-project.git
 cd quiz-game-project
 ```
 
-### 2. Inicie os containers Docker
+### 2. ⚠️ Configure os arquivos .env (IMPORTANTE!)
+
+Cada serviço precisa de um arquivo `.env`. Copie os exemplos:
+
+**Windows (PowerShell):**
+```powershell
+copy .env.example .env
+copy auth-service\example.env auth-service\.env
+copy room-service\example.env room-service\.env
+copy question-service\example.env question-service\.env
+copy match-service\example.env match-service\.env
+copy statistics\example.env statistics\.env
+```
+
+**Linux/Mac:**
+```bash
+cp .env.example .env
+cp auth-service/example.env auth-service/.env
+cp room-service/example.env room-service/.env
+cp question-service/example.env question-service/.env
+cp match-service/example.env match-service/.env
+cp statistics/example.env statistics/.env
+```
+
+#### 🔑 Configurar API de IA (question-service)
+
+O serviço de perguntas usa **OpenRouter** (plataforma de IA). Você precisa de uma API key:
+
+1. Acesse https://openrouter.ai/
+2. Crie uma conta e pegue sua API key
+3. Edite o arquivo `question-service/.env`:
+   ```
+   OPENROUTER_API_KEY=sua-api-key-aqui
+   OPENROUTER_MODEL=mistralai/mistral-7b-instruct
+   ```
+
+> **Nota:** Sem a API key, as perguntas não serão geradas!
+
+### 3. Inicie os containers Docker
 
 ```bash
 docker-compose up -d --build
@@ -34,7 +72,7 @@ docker-compose up -d --build
 
 ⏳ **Aguarde alguns minutos** na primeira vez (ele baixa as imagens e compila tudo).
 
-### 3. Verifique se todos os serviços estão rodando
+### 4. Verifique se todos os serviços estão rodando
 
 ```bash
 docker ps
@@ -50,13 +88,13 @@ Você deve ver **8 containers** rodando:
 - `question_service` - Perguntas (IA)
 - `statistics_service` - Estatísticas
 
-### 4. Instale as dependências do cliente de teste
+### 5. Instale as dependências do cliente de teste
 
 ```bash
 npm install
 ```
 
-### 5. Rode o cliente interativo
+### 6. Rode o cliente interativo
 
 ```bash
 node test-game-interactive.js
@@ -163,7 +201,7 @@ quiz-game-project/
 ## 🎮 Usuário de Teste
 
 Se quiser usar um usuário já cadastrado:
-- **Email**: bianca@teste.com
+- **Usuario**: Bianca
 - **Senha**: 123456
 
 ---
