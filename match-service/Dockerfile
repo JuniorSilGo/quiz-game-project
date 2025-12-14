@@ -19,6 +19,7 @@ COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
 
-EXPOSE 50051
+# match-service roda na porta 50053
+EXPOSE 50053
 
 CMD ["node", "dist/main"]
