@@ -163,7 +163,7 @@ quiz-game-project/
 ## 🎮 Usuário de Teste
 
 Se quiser usar um usuário já cadastrado:
-- **Email**: bianca@teste.com
+- **Email**: bianca
 - **Senha**: 123456
 
 ---
