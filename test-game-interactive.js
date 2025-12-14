@@ -7,6 +7,7 @@ const readline = require('readline');
 const PORTS = {
   AUTH: 'localhost:50051',
   ROOM: 'localhost:50052',
+  MATCH: 'localhost:50053',
   QUESTION: 'localhost:50054',
   STATISTICS: 'localhost:50050',
 };
@@ -24,7 +25,7 @@ function loadProto(protoPath) {
 }
 
 // Clientes gRPC
-let authClient, userClient, roomClient, questionClient, statisticsClient;
+let authClient, userClient, roomClient, matchClient, questionClient, statisticsClient;
 
 function initClients() {
   const authProto = loadProto(path.join(__dirname, 'auth-service/proto/auth.proto'));
@@ -33,6 +34,9 @@ function initClients() {
 
   const roomProto = loadProto(path.join(__dirname, 'room-service/proto/room.proto'));
   roomClient = new roomProto.room.RoomService(PORTS.ROOM, grpc.credentials.createInsecure());
+
+  const matchProto = loadProto(path.join(__dirname, 'match-service/src/infrastructure/grpc/proto/match.proto'));
+  matchClient = new matchProto.match.MatchService(PORTS.MATCH, grpc.credentials.createInsecure());
 
   const questionProto = loadProto(path.join(__dirname, 'question-service/src/infrastructure/grpc/proto/question.proto'));
   questionClient = new questionProto.question.QuestionService(PORTS.QUESTION, grpc.credentials.createInsecure());
@@ -266,98 +270,150 @@ async function generateQuestions() {
     return;
   }
 
-  printHeader('❓ GERAR PERGUNTAS');
+  printHeader('📊 STATUS DO MATCH');
+  console.log(`\n  📍 Sala: ${currentRoom.name}`);
   
   return new Promise((resolve) => {
     const request = {
-      topic: currentRoom.topic,
-      difficulty: currentRoom.difficulty,
-      quantity: currentRoom.rounds,
+      userId: currentUser.id,
+      roomName: currentRoom.name,
     };
 
-    console.log(`\n⏳ Gerando ${request.quantity} perguntas sobre "${request.topic}"...`);
-    console.log('   (Isso pode levar alguns segundos, usando IA para gerar as perguntas)\n');
+    console.log(`\n⏳ Buscando status do match...`);
 
-    questionClient.GenerateQuestions(request, (err, response) => {
+    matchClient.GetMatchStatus(request, (err, response) => {
       if (err) {
-        printError(`Erro ao gerar perguntas: ${err.details || err.message}`);
+        printError(`Erro ao buscar status: ${err.details || err.message}`);
+        printInfo('As perguntas são geradas automaticamente ao criar a sala.');
+        printInfo('Se você está em uma sala, use a opção 6 para jogar!');
         resolve(false);
         return;
       }
       
-      if (response.questions && response.questions.length > 0) {
-        currentQuestions = response.questions;
-        printSuccess(`${currentQuestions.length} perguntas geradas!`);
-        resolve(true);
-      } else {
-        printInfo('Perguntas serão geradas em background via RabbitMQ.');
-        printInfo('Aguarde alguns segundos e tente buscar novamente.');
-        resolve(false);
+      printSuccess('Match encontrado!');
+      console.log(`\n  📊 Round atual: ${response.currentRound}`);
+      console.log(`  📝 Tópico: ${response.topic}`);
+      console.log(`  ⚡ Dificuldade: ${response.difficulty}`);
+      
+      if (response.question) {
+        console.log(`\n  📋 Próxima pergunta disponível!`);
+        console.log(`     "${response.question.statement?.substring(0, 50)}..."`);
       }
+      
+      printInfo('\nUse a opção 6 para jogar o quiz!');
+      resolve(true);
     });
   });
 }
 
 async function playQuiz() {
-  if (currentQuestions.length === 0) {
-    printError('Nenhuma pergunta disponível! Gere perguntas primeiro.');
+  if (!currentRoom) {
+    printError('Entre em uma sala primeiro!');
     return;
   }
 
   printHeader('🎮 JOGAR QUIZ');
+  console.log(`\n  📍 Sala: ${currentRoom.name}`);
+  console.log(`  📝 Tópico: ${currentRoom.topic}`);
+  console.log(`  ⚡ Dificuldade: ${currentRoom.difficulty}`);
+  console.log(`  🔄 Rodadas: ${currentRoom.rounds}`);
   
   score = 0;
+  let totalRounds = currentRoom.rounds || 5;
+  let currentRound = 1;
+  let gameFinished = false;
 
-  for (let i = 0; i < currentQuestions.length; i++) {
-    const q = currentQuestions[i];
-    
-    // Adaptar campos do proto: statement/alternatives/correctAnswer
-    const questionText = q.statement || q.question;
-    const alternatives = q.alternatives || q.options || {};
-    const correctAnswer = q.correctAnswer || q.answer;
-    
-    // Converter alternatives de objeto para array
-    const optionKeys = Object.keys(alternatives).sort(); // ['A', 'B', 'C', 'D']
+  while (!gameFinished && currentRound <= totalRounds) {
+    // Buscar status do match (pergunta atual)
+    const matchStatus = await new Promise((resolve) => {
+      matchClient.GetMatchStatus({
+        userId: currentUser.id,
+        roomName: currentRoom.name,
+      }, (err, response) => {
+        if (err) {
+          printError(`Erro ao buscar pergunta: ${err.details || err.message}`);
+          resolve(null);
+          return;
+        }
+        resolve(response);
+      });
+    });
+
+    if (!matchStatus || !matchStatus.question) {
+      printError('Não foi possível carregar a pergunta.');
+      break;
+    }
+
+    const q = matchStatus.question;
+    const questionText = q.statement;
+    const alternatives = q.alternatives || {};
+    const optionKeys = Object.keys(alternatives).sort();
     const optionsList = optionKeys.map(key => ({ key, text: alternatives[key] }));
     
     console.log(`\n┌─────────────────────────────────────────────────────────┐`);
-    console.log(`│  Pergunta ${i + 1}/${currentQuestions.length}                                      │`);
+    console.log(`│  Pergunta ${matchStatus.currentRound}/${totalRounds}                                      │`);
     console.log(`└─────────────────────────────────────────────────────────┘`);
     console.log(`\n  ${questionText}\n`);
     
-    optionsList.forEach((opt, idx) => {
+    optionsList.forEach((opt) => {
       console.log(`    ${opt.key}. ${opt.text}`);
     });
 
     const answer = await prompt('\n  Sua resposta (A/B/C/D): ');
     const userAnswer = answer.trim().toUpperCase();
 
-    if (optionKeys.includes(userAnswer)) {
-      if (userAnswer === correctAnswer) {
+    if (!optionKeys.includes(userAnswer)) {
+      printError('Opção inválida! Use A, B, C ou D.');
+      continue;
+    }
+
+    // Enviar resposta ao match-service
+    const answerResult = await new Promise((resolve) => {
+      matchClient.Answer({
+        roomName: currentRoom.name,
+        userId: currentUser.id,
+        answer: userAnswer,
+      }, (err, response) => {
+        if (err) {
+          printError(`Erro ao enviar resposta: ${err.details || err.message}`);
+          resolve(null);
+          return;
+        }
+        resolve(response);
+      });
+    });
+
+    if (answerResult) {
+      if (answerResult.isRight) {
         printSuccess('Correto! 🎉');
         score++;
       } else {
-        printError(`Incorreto! A resposta era: ${correctAnswer} - ${alternatives[correctAnswer]}`);
+        printError(`Incorreto!`);
       }
-    } else {
-      printError('Opção inválida! Use A, B, C ou D.');
+      
+      console.log(`  📊 Pontuação atual: ${score}/${matchStatus.currentRound}`);
+      
+      // Verificar se é a última rodada
+      if (matchStatus.currentRound >= totalRounds) {
+        gameFinished = true;
+      }
     }
     
-    console.log(`  📊 Pontuação atual: ${score}/${i + 1}`);
+    currentRound++;
   }
 
   printHeader('🏆 RESULTADO FINAL');
-  console.log(`\n  Você acertou ${score} de ${currentQuestions.length} perguntas!`);
-  console.log(`  Porcentagem: ${((score / currentQuestions.length) * 100).toFixed(1)}%`);
+  console.log(`\n  Você acertou ${score} de ${totalRounds} perguntas!`);
+  console.log(`  Porcentagem: ${((score / totalRounds) * 100).toFixed(1)}%`);
   
   // Determina se venceu (mais de 70% de acertos)
-  const won = score >= currentQuestions.length * 0.7;
+  const won = score >= totalRounds * 0.7;
   
-  if (score === currentQuestions.length) {
+  if (score === totalRounds) {
     console.log('\n  🌟 PERFEITO! Você acertou todas! 🌟');
   } else if (won) {
     console.log('\n  👏 Muito bem! Ótimo desempenho!');
-  } else if (score >= currentQuestions.length * 0.5) {
+  } else if (score >= totalRounds * 0.5) {
     console.log('\n  👍 Bom trabalho! Continue praticando!');
   } else {
     console.log('\n  📚 Que tal estudar mais sobre esse assunto?');
@@ -382,6 +438,31 @@ async function playQuiz() {
       console.log(`  📊 Score total: ${response.score}`);
       console.log(`  🏆 Vitórias: ${response.wins}`);
       console.log(`  🎮 Partidas: ${response.matches}`);
+      resolve(true);
+    });
+  });
+
+  // Mostrar ranking do match
+  console.log('\n  ⏳ Buscando ranking da partida...');
+  
+  await new Promise((resolve) => {
+    matchClient.GetMatchRanking({
+      roomName: currentRoom.name,
+      userId: currentUser.id,
+    }, (err, response) => {
+      if (err) {
+        console.log(`  (Ranking não disponível)`);
+        resolve(false);
+        return;
+      }
+      
+      if (response.userRankings && response.userRankings.length > 0) {
+        console.log('\n  🏆 Ranking da Partida:');
+        response.userRankings.forEach((player, index) => {
+          const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '  ';
+          console.log(`    ${medal} ${index + 1}. Jogador ${player.userId} - ${player.score} pontos`);
+        });
+      }
       resolve(true);
     });
   });
@@ -476,11 +557,11 @@ async function showMenu() {
   console.log('  2. Login');
   
   console.log('\n  ─── Salas ───');
-  console.log('  3. Criar sala (definir max jogadores, tópico, dificuldade)');
+  console.log('  3. Criar sala (já gera perguntas automaticamente!)');
   console.log('  4. Entrar em uma sala');
   
   console.log('\n  ─── Jogo ───');
-  console.log('  5. Gerar perguntas');
+  console.log('  5. Ver status do match');
   console.log('  6. Jogar quiz');
   
   console.log('\n  ─── Ranking ───');
